@@ -10,6 +10,8 @@ After installing [**Tex Studio**](https://www.texstudio.org/), user need to setu
 
 <img src="images/texstudio-settings.png" width="100%">
 
+If user prefer **Visual Studio Code**, they can also take a look at [this guide](https://mathjiajia.github.io/vscode-and-latex/).
+
 ## Git convention
 
 ### Branch name
@@ -19,7 +21,8 @@ Each developer has to create their own branch to work on their own user story, a
 Each branch has to follow this naming convention: `<purpose name>/<user story number>-action-you-going-to-do`
 Example: `docs/US123-add-new-documents`.
 
-The purpose of each branch has to be one of these values: 
+The purpose of each branch has to be one of these values:
+
 - `docs`: adding new content.
 - `mod`: modify the existing content.
 
@@ -29,10 +32,10 @@ The **user story number** **MUST** be the number of US you are working on. For t
 
 Developers want to make change to `dev`, they need to create pull request to merge their work to the `dev` branch.
 
-Each pull request **MUST** following this naming convention: `<purpose name>: [<user story number>] action you going to do.` 
+Each pull request **MUST** following this naming convention: `<purpose name>: [<user story number>] action you going to do.`
 Example: `docs: [US123] add new documents to the beginning section`.
 
-The ***purpose name*** and ***user story number*** **MUST** be the same with the one the developer used to name their branch.
+The **_purpose name_** and **_user story number_** **MUST** be the same with the one the developer used to name their branch.
 
 The description for the PR should be more detailed than the one in the branch's name.
 
