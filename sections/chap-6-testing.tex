@@ -873,3 +873,128 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 \end{figure}
 Đi tìm hiểu sâu hơn về các chỉ số các pod của Catalog microservice, ta nhận thấy rằng chỉ có một vài pod (được đánh dấu đỏ trên hình), là được sử dụng gần hết công suất, thông qua việc chỉ số CPU ultilization gần tối đa. Đây là biểu hiện của việc lượng tải được phân bố không đều vào các pod, từ đó dẫn đến pod thì bị quá tải, pod thì chạy với rất ít tải. Nguyên nhân dẫn đến hành vi này là do môi trường giả lập Kubernetes cluster trên local không cung cấp được load balancer cho Kubernetes cluster, do đó việc chia tải từ Kubernetes service vào các pod diễn ra theo trình tự ngẫu nhiên, dẫn tới hiện tượng như miêu tả trên hình.\\[0.5cm]
 \textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.
+\section{Kiểm thử hệ thống}
+\subsection{Kiểm thử API}
+\begin{itemize}
+  \item Đánh giá API là đạt yêu cầu: Đối với hệ thống backend microservice, nhóm sử dụng công cụ Postman cho việc lưu trữ
+, đồng bộ API giữa các thành viên trong nhóm. Và Postman cũng là ứng dụng được nhóm sử dụng để kiểm thử API.
+  \item Thông qua postman ta có thể kiểm tra tính đúng đắn về định dạng của request, response, cũng
+  như đánh giá thời gian phản hồi của mỗi API.
+  \item Các API đã được kiểm thử bao gồm:
+    \begin{itemize}
+      \item API lấy danh sách sản phẩm
+      \item API lấy thông tin chi tiết sản phẩm
+      \item API đăng ký tài khoản
+      \item API đăng nhập vào hệ thống
+      \item API lấy thông tin tài khoản
+      \item API cập nhật thông tin tài khoản
+      \item API lấy danh sách đơn hàng
+      \item API tạo đơn hàng
+      \item API xem chi tiết đơn hàng đã đặt
+      \item API cập nhật trạng thái đơn hàng
+      \item API xóa đơn hàng đã đặt
+      \item API nhận thông báo realtime khi có đơn hàng mới hoặc trạng thái đơn hàng thay đổi
+      \item API lấy danh sách các thông báo của người dùng
+      \item API đánh dấu một thông báo đã đọc
+      \item API đánh dấu tất cả thông báo đã đọc
+    \end{itemize}
+\end{itemize}
+\subsection{Kiểm thử yêu cầu chức năng cho ứng dụng web}
+Để kiểm tra tính đúng đắn của hệ thống so với các yêu cầu đặt ra ban đầu cho ứng dụng web, nhóm
+thực hiện kiểm tra các chức năng cụ thể sau đây:
+% \subsubsection{Màn hình trang chủ}
+% \begin{itemize}
+%   \item \textbf{Hiển thị danh sách sản phẩm}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Không
+%       \item Các bước thực hiện: Truy cập vào trang chủ
+%       \item Kết quả mong đợi: Hiển thị danh sách tất cả sản phẩm của cửa hàng, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá.Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
+%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng, đầy đủ thông tin cần thiết.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+%   \item \textbf{Tìm kiếm sản phẩm}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Không
+%       \item Các bước thực hiện: Truy cập vào trang chủ
+%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm phù hợp với từ khóa tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
+%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với từ khóa tìm kiếm, đầy đủ thông tin cần thiết.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+%   \item \textbf{Lọc sản phẩm theo khoảng giá}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Không
+%       \item Các bước thực hiện: Truy cập vào trang chủ
+%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm có giá trong khoảng giá tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
+%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với khoảng giá tìm kiếm, đầy đủ thông tin cần thiết.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+%   \item \textbf{Lọc sản phẩm theo danh mục}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Không
+%       \item Các bước thực hiện: Truy cập vào trang chủ
+%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm thuộc danh mục tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
+%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với danh mục tìm kiếm, đầy đủ thông tin cần thiết.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+% \end{itemize}
+% \subsubsection{Màn hình chi tiết sản phẩm}
+% \begin{itemize}
+%   \item \textbf{Hiển thị thông tin chi tiết sản phẩm}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Không
+%       \item Các bước thực hiện: Click vào sản phẩm cần xem chi tiết
+%       \item Kết quả mong đợi: Hiển thị đầy đủ thông tin chi tiết của sản phẩm, bao gồm tên, giá, hình ảnh, mô tả, số lượng đã bán, đánh giá, số lượng tồn kho, hãng sản xuất, danh mục, ngày tạo, ngày ra mắt.
+%       \item Kết quả thực tế: Thông tin chi tiết sản phẩm được hiển thị đúng, đầy đủ thông tin cần thiết.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+%   \item \textbf{Thêm sản phẩm vào giỏ hàng}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Có
+%       \item Các bước thực hiện: Click vào sản phẩm cần thêm vào giỏ hàng, chọn số lượng cần mua, chọn nút "Thêm vào giỏ hàng"
+%       \item Kết quả mong đợi: Hiển thị thông báo thêm sản phẩm vào giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng tăng lên.
+%       \item Kết quả thực tế: Thông báo thêm sản phẩm vào giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng tăng lên đúng.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+% \end{itemize}
+% \subsubsection{Màn hình giỏ hàng}
+% \begin{itemize}
+%   \item \textbf{Hiển thị thông tin giỏ hàng}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Có
+%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng
+%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm trong giỏ hàng, mỗi sản phẩm bao gồm thông tin cơ bản như tên, giá, hình ảnh, số lượng, tổng tiền. Hiển thị tổng số lượng sản phẩm, tổng tiền cần thanh toán.
+%       \item Kết quả thực tế: Danh sách sản phẩm trong giỏ hàng được hiển thị đúng, đầy đủ thông tin cần thiết. Tổng số lượng sản phẩm, tổng tiền cần thanh toán được hiển thị đúng.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+%   \item \textbf{Xóa sản phẩm khỏi giỏ hàng}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Có
+%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng, chọn nút xóa tương ứng với sản phẩm cần xóa
+%       \item Kết quả mong đợi: Hiển thị thông báo xóa sản phẩm khỏi giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng giảm đi.
+%       \item Kết quả thực tế: Thông báo xóa sản phẩm khỏi giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng giảm đi đúng.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+%   \item \textbf{Cập nhật số lượng sản phẩm trong giỏ hàng}
+%     \begin{itemize}
+%       \item Yêu cầu đăng nhập: Có
+%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng, điều chỉnh số lượng mong muốn, hệ thống sẽ tự động cập nhật theo số lượng mới
+%       \item Kết quả mong đợi: Hiển thị thông báo cập nhật số lượng sản phẩm trong giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng được cập nhật.
+%       \item Kết quả thực tế: Thông báo cập nhật số lượng sản phẩm trong giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng được cập nhật đúng.
+%       \item Kết luận: Đạt yêu cầu
+%     \end{itemize}
+% \end{itemize}
+% \subsubsection{Màn hình đăng nhập}
+\subsubsection{Màn hình trang chủ}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|m{2.5cm}|m{5cm}|m{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \multicolumn{1}{c|}{\textbf{Các bước thực hiện}}                                              & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}}                                                                                     & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị danh sách sản phẩm                 & \begin{tabular}[c]{@{}l@{}}- Yêu cầu đăng nhập: không\\ - Truy cập vào trang chủ\end{tabular} & Hiện thị đầy đủ các thông tin về các sản phẩm hiện có của cửa hàng như hình ảnh, tên sản phẩm, giá tiền, đánh giá, số lượng đã bán. & Đạt               \\ \hline
+  2            & Hiển thị danh sách các loại sản phẩm        & \begin{tabular}[c]{@{}l@{}}- Yêu cầu đăng nhập: không\\ - Truy cập vào trang chủ\end{tabular} & Hiện thị đầy đủ các loại sản phẩm, khi click vào từng loại, hệ thống hiển thị đẩy đủ tất cả sản phẩm thuộc loại đó                  & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử yêu cầu chức năng màn hình trang chủ - HOMEPAGE}
+  \label{tab:my-table}
+\end{table}
