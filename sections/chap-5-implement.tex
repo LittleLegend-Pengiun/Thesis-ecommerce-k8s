@@ -1,26 +1,36 @@
 \chapter{Hiện thực hệ thống}
-\section{Công nghệ sử dụng}
-Để hiện thực hệ thống, nhóm quyết định sử dụng các công nghệ sau:
-\begin{itemize}
-    \item ReactJS: Hiện thực UI, frontend.
-    \item Java Springboot: Hiện thực microservice, backend.
-    \item PostgresSQL: Hệ cơ sở dữ liệu lưu trữ thông tin.
-    \item Kubernetes: Deploy các microservice.
-    \item Minikube: Chạy Kubernetes cluster trên local.
-    \item Terraform: Khởi tạo 
-\end{itemize}
+% \section{Công nghệ sử dụng}
+% Để hiện thực hệ thống, nhóm quyết định sử dụng các công nghệ sau:
+% \begin{itemize}
+%     \item ReactJS: Hiện thực UI, frontend.
+%     \item Java Springboot: Hiện thực microservice, backend.
+%     \item PostgresSQL: Hệ cơ sở dữ liệu lưu trữ thông tin.
+%     \item Kubernetes: Deploy các microservice.
+%     \item Minikube: Chạy Kubernetes cluster trên local.
+%     \item Terraform: Khởi tạo 
+% \end{itemize}
 
-\section{Giới hạn phạm vi}
-\subsection{Về mặt nghiệp vụ}
-\noindent Sau khi bàn bạc, nhóm đi tới thống nhất là sẽ hiện thực phần Trang chủ (Home page - Catalog), vì đó là thành phần mà người dùng sẽ gặp đầu tiên khi bắt đầu truy cập vào hệ thống.
-\subsection{Về mặt thành phần hệ thống}
-\noindent Sau khi cân nhắc kỹ lưỡng, để đảm bảo cho phiên bản demo thể hiện được trọn vẹn và đầy đủ nhất các tính chất cốt lõi của hệ thống, nhóm đã giới hạn phạm vi hiện thực của hệ thống xuống còn các thành phần như sau:
-\begin{itemize}
-    \item Frontend: Trang chủ - Catalog, thể hiện danh sách các mặt hàng đang được bày bán 
-    \item Backend: Catalog service, cung cấp API danh sách sản phẩm.
-    \item Minikube cluster: Cung cấp môi trường Kubernetes cluster local trên máy tính cá nhân.
-    \item Deployment: Thành phần cơ bản nhất của hệ thống, dùng để quản lý trực tiếp các pod.
-    \item Service: Một lớp ảo hóa để các thành phần khác có thể truy cập tới các pod.
-    \item Ingress: Đóng vai trò như reverse proxy, cung cấp API gateway để kết nối từ bên ngoài cluster tới service.
-    \item Horizontal Pod Autoscaler: Dùng để tăng hoặc giảm số pod một cách tự động, dựa trên các thông số (metrics) của chính các pod đó.
-\end{itemize}
+% \section{Giới hạn phạm vi}
+% \subsection{Về mặt nghiệp vụ}
+% \noindent Sau khi bàn bạc, nhóm đi tới thống nhất là sẽ hiện thực phần Trang chủ (Home page - Catalog), vì đó là thành phần mà người dùng sẽ gặp đầu tiên khi bắt đầu truy cập vào hệ thống.
+% \subsection{Về mặt thành phần hệ thống}
+% \noindent Sau khi cân nhắc kỹ lưỡng, để đảm bảo cho phiên bản demo thể hiện được trọn vẹn và đầy đủ nhất các tính chất cốt lõi của hệ thống, nhóm đã giới hạn phạm vi hiện thực của hệ thống xuống còn các thành phần như sau:
+% \begin{itemize}
+%     \item Frontend: Trang chủ - Catalog, thể hiện danh sách các mặt hàng đang được bày bán 
+%     \item Backend: Catalog service, cung cấp API danh sách sản phẩm.
+%     \item Minikube cluster: Cung cấp môi trường Kubernetes cluster local trên máy tính cá nhân.
+%     \item Deployment: Thành phần cơ bản nhất của hệ thống, dùng để quản lý trực tiếp các pod.
+%     \item Service: Một lớp ảo hóa để các thành phần khác có thể truy cập tới các pod.
+%     \item Ingress: Đóng vai trò như reverse proxy, cung cấp API gateway để kết nối từ bên ngoài cluster tới service.
+%     \item Horizontal Pod Autoscaler: Dùng để tăng hoặc giảm số pod một cách tự động, dựa trên các thông số (metrics) của chính các pod đó.
+% \end{itemize}
+\section{Lựa chọn công nghệ và thư viện}
+\section{Mã nguồn}
+\subsection{Quản lý mã nguồn}
+\noindent Git là một hệ thống quản lý phiên bản mã nguồn mở rất phổ biến, được sử dụng để quản lý mã nguồn trong các dự án phần mềm. Nó được Linus Torvalds phát triển vào năm 2005 và đã trở thành một công cụ không thể thiếu trong cộng đồng phần mềm mã nguồn mở. Git giúp các nhà phát triển dễ dàng và hiệu quả làm việc trên các phiên bản khác nhau của cùng một dự án, từ đó hỗ trợ quản lý và giám sát quá trình phát triển phần mềm. \\[0.5cm]
+Nhóm của chúng tôi đã lựa chọn \textbf{GitHub} để quản lý mã nguồn. GitHub là một dịch vụ lưu trữ mã nguồn trực tuyến (source code repository) và nền tảng hợp tác phát triển phần mềm dựa trên Git. GitHub cho phép các nhà phát triển lưu trữ, quản lý và chia sẻ mã nguồn của các dự án phần mềm.
+
+\subsection{Cấu trúc mã nguồn}
+
+
+\section{Giao diện hệ thống}
