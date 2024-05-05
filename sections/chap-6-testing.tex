@@ -988,13 +988,134 @@ thực hiện kiểm tra các chức năng cụ thể sau đây:
 \begin{table}[H]
   \centering
   \resizebox{\columnwidth}{!}{%
-  \begin{tabular}{|c|m{2.5cm}|m{5cm}|m{5cm}|c|}
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
   \hline
-  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \multicolumn{1}{c|}{\textbf{Các bước thực hiện}}                                              & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}}                                                                                     & \textbf{Đánh giá} \\ \hline
-  1            & Hiển thị danh sách sản phẩm                 & \begin{tabular}[c]{@{}l@{}}- Yêu cầu đăng nhập: không\\ - Truy cập vào trang chủ\end{tabular} & Hiện thị đầy đủ các thông tin về các sản phẩm hiện có của cửa hàng như hình ảnh, tên sản phẩm, giá tiền, đánh giá, số lượng đã bán. & Đạt               \\ \hline
-  2            & Hiển thị danh sách các loại sản phẩm        & \begin{tabular}[c]{@{}l@{}}- Yêu cầu đăng nhập: không\\ - Truy cập vào trang chủ\end{tabular} & Hiện thị đầy đủ các loại sản phẩm, khi click vào từng loại, hệ thống hiển thị đẩy đủ tất cả sản phẩm thuộc loại đó                  & Đạt               \\ \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}}            & \multicolumn{1}{c|}{\textbf{Các bước thực hiện}}                                                                                                             & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}}                                                                                                                                               & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị danh sách sản phẩm                            & \parbox[t]{5cm}{- Tiền điều kiện: không\\ - Truy cập vào trang chủ}                                                               & Hiện thì đầy đủ các thông tin về các sản phẩm hiện có của cửa hàng như hình ảnh, tên sản phẩm, giá tiền, đánh giá, số lượng đã bán. Danh sách được phân trang, mỗi trang có tối đa 8 sản phẩm & Đạt               \\ \hline
+  2            & Hiển thị danh sách các loại sản phẩm                   & \parbox[t]{5cm}{- Tiền điều kiện: không\\ - Truy cập vào trang chủ}                                                                & Hiện thị đầy đủ các loại sản phẩm, khi click vào từng loại, hệ thống hiển thị đẩy đủ tất cả sản phẩm thuộc loại đó                                                                            & Đạt               \\ \hline
+  3            & Tìm kiếm sản phẩm và lọc sản phẩm theo khoảng giá tiền & \parbox[t]{5cm}{- Tiền điều kiện: không\\ - Truy cập vào trang chủ\\ - Nhập từ khóa vào ô tìm kiếm\\ - Chọn khoảng tiền mong muốn} & Hiển thị danh sách sản phẩm phù hợp với từ khóa tìm kiếm và khoảng tiền được chọn                                                                                                             & Đạt               \\ \hline
   \end{tabular}%
   }
-  \caption{Kiểm thử yêu cầu chức năng màn hình trang chủ - HOMEPAGE}
-  \label{tab:my-table}
+  \caption{Kiểm thử các yêu cầu chức năng màn hình trang chủ}
+  \label{tab:homepage-table}
+  \end{table}
+\subsubsection{Màn hình chi tiết sản phẩm}
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị thông tin chi tiết sản phẩm        & \parbox[t]{5cm}{- Tiền điều kiện: không\\ - Truy cập vào trang chủ\\ - Chọn sản phẩm cần xem chi tiết} & Hiển thị đầy đủ thông tin chi tiết của sản phẩm, bao gồm tên, giá, hình ảnh, mô tả, số lượng đã bán, đánh giá, số lượng tồn kho, hãng sản xuất, danh mục, ngày tạo, ngày ra mắt. & Đạt               \\ \hline
+  2            & Thêm sản phẩm vào giỏ hàng                  & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang chủ\\ - Chọn sản phẩm muốn thêm vào giỏ hàng\\ - Chọn số lượng sản phẩm, giá trị mặc định là 1\\ - Chọn nút "Thêm vào giỏ hàng"} & Hiển thị thông báo thêm sản phẩm vào giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng tăng lên. & Đạt               \\ \hline
+  3            & Mua trực tiếp sản phẩm                      & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang chủ\\ - Chọn sản phẩm muốn mua\\ - Chọn số lượng sản phẩm, giá trị mặc định là 1\\ - Chọn nút "Mua ngay"} & Hệ thống chuyển đến trang mua hàng, với sản phẩm và số lượng tương ứng & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình trang chi tiết sản phẩm}
+  \label{tab:product-detail-table}
+\end{table}
+\subsubsection{Màn hình trang đăng nhập - đăng ký}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Đăng nhập vào hệ thống                      & \parbox[t]{5cm}{- Tiền điều kiện: đã đăng ký tài khoản thành công\\ - Truy cập vào trang chủ\\ - Chọn nút "Đăng nhập" trên thanh header\\ - Nhập tên đăng nhập và mật khẩu\\ - Chọn nút "Đăng nhập"} & Hiển thị thông báo đăng nhập thành công và chuyển đến trang chủ, hoặc hiển thị thông báo lỗi nếu tên đăng nhập hoặc mật khẩu không đúng & Đạt               \\ \hline
+  2            & Đăng ký tài khoản                            & \parbox[t]{5cm}{- Tiền điều kiện: không\\ - Truy cập vào trang chủ\\ - Chọn nút "Đăng nhập"\\ -Chuyển đến trang đăng ký\\ - Nhập thông tin cần thiết\\ - Chọn nút "Đăng ký"} & Hiển thị thông báo đăng ký thành công, chuyển đến trang đăng nhập hoặc thông báo lỗi nếu thông tin không hợp lệ & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption {Kiểm thử các yêu cầu chức năng màn hình trang đăng nhập}
+  \label{tab:login-table}
+\end{table}
+\subsubsection{Màn hình giỏ hàng}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị thông tin giỏ hàng                   & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang chủ\\ - Chọn biểu tượng giỏ hàng} & Hiển thị danh sách sản phẩm trong giỏ hàng, mỗi sản phẩm bao gồm thông tin cơ bản như tên, giá, hình ảnh, số lượng, tổng tiền. Hiển thị tổng số lượng sản phẩm, tổng tiền cần thanh toán. & Đạt               \\ \hline
+  2            & Xóa sản phẩm khỏi giỏ hàng                    & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, giỏ hàng phải có ít nhất một sản phẩm\\ - Truy cập vào trang chủ\\ - Chọn biểu tượng giỏ hàng\\ - Chọn nút xóa tương ứng với sản phẩm cần xóa hoặc điều chỉnh số lượng sản phẩm về 0} & Hiển thị thông báo xóa sản phẩm khỏi giỏ hàng thành công, cập nhật lại giỏ hàng & Đạt               \\ \hline
+  3            & Thay đổi số lượng sản phẩm trong giỏ hàng      & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, giỏ hàng phải có ít nhất một sản phẩm\\ - Truy cập vào trang chủ\\ - Chọn biểu tượng giỏ hàng\\ - Điều chỉnh số lượng sản phẩm mong muốn} & Thông tin giỏ hàng cập nhật liên tục theo sự thay đổi của người dùng & Đạt               \\ \hline
+  4            & Thanh toán đơn hàng                          & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, giỏ hàng phải có ít nhất một sản phẩm\\ - Truy cập vào trang chủ\\ - Chọn biểu tượng giỏ hàng\\ - Chọn nút "Thanh toán"} & Hệ thống chuyển đến trang thanh toán với các sản phẩm tương ứng trong giỏ hang & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình giỏ hàng}
+  \label{tab:cart-table}
+\end{table}
+\subsubsection{Màn hình quản lý đơn hàng}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị danh sách đơn hàng                   & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý đơn hàng} & Hiển thị danh sách đơn hàng của người dùng, mỗi đơn hàng bao gồm thông tin cơ bản như mã đơn hàng, ngày tạo, trạng thái đơn hàng, phương thức thanh toán, tổng tiền. Danh sách được phân trang, mỗi trang tối đa 10 đơn hàng. & Đạt               \\ \hline
+  2            & Xem chi tiết đơn hàng                         & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, có ít nhất một đơn hàng\\ - Truy cập vào trang quản lý đơn hàng\\ - Chọn đơn hàng cần xem chi tiết} & Hiển thị đầy đủ thông tin chi tiết của đơn hàng, bao gồm mã đơn hàng, ngày tạo, trạng thái, tổng tiền, danh sách sản phẩm, thông tin người đặt hàng, địa chỉ giao hàng. & Đạt               \\ \hline
+  3            & Lọc đơn hàng theo trạng thái và ngày đặt hàng                & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý đơn hàng\\ - Chọn trạng thái và ngày đặt hàng cần lọc} & Hiển thị danh sách đơn hàng phù hợp với trạng thái và ngày đặt hàng được chọn & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình quản lý đơn hàng}
+  \label{tab:order-table}
+\end{table}
+\subsubsection{Màn hình quản lý tài khoản}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị thông tin tài khoản                  & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý tài khoản} & Hiển thị thông tin tài khoản của người dùng, bao gồm tên đầy đủ, địa chỉ mail, số điện thoại & Đạt               \\ \hline
+  2            & Cập nhật thông tin tài khoản                   & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý tài khoản\\ - Nhập thông tin cần cập nhật\\ - Chọn nút "Lưu thay đổi"} & Hiển thị thông báo cập nhật thông tin tài khoản thành công, cập nhật lại thông tin tài khoản. Nếu người dùng không chọn "Lưu thay đổi", thông tin mới sẽ tự mất khi chuyển sang trang khác.& Đạt               \\ \hline
+  3            & Đổi mật khẩu                                 & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý tài khoản\\ - Nhập mật khẩu cũ, mật khẩu mới, xác nhận mật khẩu mới\\ - Chọn nút "Lưu thay đổi"} & Hiển thị thông báo đổi mật khẩu thành công, cập nhật lại thông tin tài khoản & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình quản lý tài khoản}
+  \label{tab:account-table}
+\end{table}
+\subsubsection{Màn hình quản lý thông báo}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị danh sách thông báo                  & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý thông báo} & Hiển thị danh sách thông báo của người dùng, mỗi thông báo bao gồm thông tin cơ bản như nội dung, ngày tạo, trạng thái. & Đạt               \\ \hline
+  2            & Đánh dấu thông báo đã đọc                     & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống\\ - Truy cập vào trang quản lý thông báo\\ - Chọn thông báo cần đánh dấu đã đọc} & Hiển thị thông báo đánh dấu đã đọc thành công, cập nhật lại trạng thái thông báo. & Đạt               \\ \hline
+  3            & Đánh dấu tất cả thông báo đã đọc              & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống} & Hiển thị thông báo đánh dấu tất cả đã đọc thành công, cập nhật lại trạng thái của tất cả thông báo. & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình quản lý thông báo}
+  \label{tab:notification-table}
+\end{table}
+\subsubsection{Màn hình cửa sổ khi có thông báo mới}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị thông báo mới                        & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống} & Hiển thị thông báo mới ở góc trên bên phải màn hình ở bất kỳ trang nào khi đơn hàng được tạo thành công hoặc trạng thái được cập nhật. Thông báo được hiển thị dưới dạng lưới, nếu có nhiều hơn 3 thông báo, hệ thống sẽ thu gọn cửa sổ, tránh ảnh hưởng đến trải nghiệm của người dùng. & Đạt               \\ \hline
+  2            & Đánh dấu thông báo đã đọc                     & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, có ít nhất một thông báo mới\\ - Hiển thị thông báo mới\\ - Chọn nút "OK"} & Thông báo bị xóa khỏi cửa sổ hiển thị, cập nhật lại trạng thái thông báo. & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình popup thông báo mới}
+  \label{tab:popup-table}
+\end{table}
+\subsubsection{Màn hình thanh toán}
+\begin{table}[H]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|p{2.5cm}|p{5cm}|p{5cm}|c|}
+  \hline
+  \textbf{STT} & \multicolumn{1}{c|}{\textbf{Tên chức năng}} & \textbf{Các bước thực hiện} & \multicolumn{1}{c|}{\textbf{Kết quả mong muốn}} & \textbf{Đánh giá} \\ \hline
+  1            & Hiển thị thông tin đơn hàng                   & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, có ít nhất một sản phẩm trong giỏ hàng hoặc sản phẩm được mua trực tiếp không thông qua giỏ hàng\\ - Truy cập vào trang thanh toán} & Hiển thị thông tin chi tiết của đơn hàng, bao gồm danh sách sản phẩm, tổng tiền, phí vận chuyển, tổng cộng, thông tin người đặt hàng. & Đạt               \\ \hline
+  2            & Thanh toán đơn hàng                          & \parbox[t]{5cm}{- Tiền điều kiện: đăng nhập vào hệ thống, có ít nhất một sản phẩm trong giỏ hàng hoặc sản phẩm được mua trực tiếp không thông qua giỏ hàng\\ - Truy cập vào trang thanh toán\\ - Chọn phương thức thanh toán\\ -Nhập địa chỉ giao hàng nếu lần đầu mua hàng\\ - Chọn nút "Thanh toán"} & Hiển thị thông báo xác nhận đơn hàng hoặc thông báo lỗi nếu thông tin đặt hàng bị thiếu. Nếu đặt hàng thành công, xóa sản phẩm khỏi giỏ hàng và chuyển đến trang chủ. & Đạt               \\ \hline
+  \end{tabular}%
+  }
+  \caption{Kiểm thử các yêu cầu chức năng màn hình thanh toán}
+  \label{tab:payment-table}
 \end{table}
