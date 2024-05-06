@@ -34,7 +34,7 @@ Ngoài ra, để việc đóng góp của các thành viên được diễn ra m
 \subsection{Cấu trúc mã nguồn}
 \noindent Nhóm đã tận dụng Github để quản lý mã nguồn cho 2 nội dung quan trọng nhất của đồ án, là báo cáo (được viết bằng Latex) và hệ thống, tương ứng với 2 repository. Mỗi repository đều có README ghi chú đầy đủ các nội dung hướng dẫn, giúp mỗi thành viên có thể nắm được các thông tin cơ bản của repository, đồng thời thực hiện các bước thiết lập nếu cần, trước khi có thể đóng góp nội dung vào đó.
 \subsubsection{Mã nguồn báo cáo}
-\noindent Do nội dung báo cáo không ít, do đó nhóm không ghi hết toàn bộ nội dung vào 1 file tex duy nhất, mà được chia ra thành nhiều file với cấu trúc như hình \ref{fig:thesis_source_code_structure}:
+\noindent Do nội dung báo cáo không ít, vì vậy nhóm không ghi hết toàn bộ nội dung vào 1 file tex duy nhất, mà được chia ra thành nhiều file với cấu trúc như hình \ref{fig:thesis_source_code_structure}:
 \begin{itemize}
     \item Thư mục \textbf{images}: Chứa toàn bộ các hình ảnh được sử dụng cho báo cáo. Bên trong còn được chia ra thành nhiều thư mục con, ứng với từng thành viên. Mỗi thành viên sẽ tự quản lý những hỉnh ảnh mà mình sử dụng trong báo cáo.
     \item Thư mục \textbf{sections}: Chứa nội dung của các chương trong báo cáo. Mỗi chương sẽ là 1 file tex riêng.
@@ -51,4 +51,26 @@ Ngoài ra, để việc đóng góp của các thành viên được diễn ra m
 
 \end{figure}
 \subsubsection{Mã nguồn hệ thống}
+\noindent Nhằm đáp ứng cho yêu cầu của đề tài và giải pháp tương ứng, hệ thống được triển khai theo kiến trúc microservice, với mỗi microservice sẽ đáp ứng một chức năng cụ thể. Để việc quản lý mã nguồn các dịch vụ này diễn ra một cách tập trung và đồng bộ, toàn bộ mã nguồn hệ thống sẽ được lưu trữ trong một repository duy nhất, được triển khai theo kiến trúc monorepo, bằng cách sử dụng \textbf{yarn workspace} và \textbf{turbo}. Cấu trúc cây thư mục sẽ trông như hình \ref{fig:ecomm_app_source_code}.
+\begin{itemize}
+    \item Thư mục \textbf{apps}: Chứa toàn bộ mã nguồn của các microservice. Các dịch vụ này được chia vào 3 thư mục con:
+    \begin{itemize}
+        \item \textbf{backend}: Chứa các microservice với mục đích hiện thực các logic hệ thống, đồng thời chứa các API để trình duyệt có thể giao tiếp.
+        \item \textbf{database}: Chứa các microservice với mục đích truy xuất database. Các logic khi query, insert với database sẽ được thực hiện bởi các dịch vụ này.
+        \item \textbf{frontend}: Chứa mã nguồn cho các microservice dùng để hiển thị giao diện cho người dùng. Hiện tại, do không đủ thời gian nên nhóm vẫn chưa thực hiện kiến trúc microservice cho frontend.
+    \end{itemize}
+    \item Thư mục \textbf{deploy}: Chứa các cấu hình phục vụ cho việc triển khai hệ thống. Hiện tại có 2 thư mục con:
+    \begin{itemize}
+        \item \textbf{k8s-ms}: Chứa các cấu hình phục vụ cho việc triển khai hệ thống thương mại điện tử lên Kubernetes, bao gồm các dịch vụ như ingress, deployment, statefulset, v.v.
+        \item \textbf{rabbitmq}: Chứa các cấu hình phục vụ cho việc triển khai RabbitMQ.
+    \end{itemize}
+\end{itemize}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[scale = 1.5]{images/hanh/ecomm-app-source-code.png}
+        \vspace*{2mm}
+    \end{center}
+    \caption{Cấu trúc mã nguồn của hệ thống}
+    \label{fig:ecomm_app_source_code}
+\end{figure}
 \section{Giao diện hệ thống}
