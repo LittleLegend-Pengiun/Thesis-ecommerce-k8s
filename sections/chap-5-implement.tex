@@ -28,9 +28,27 @@
 \section{Mã nguồn}
 \subsection{Quản lý mã nguồn}
 \noindent Git là một hệ thống quản lý phiên bản mã nguồn mở rất phổ biến, được sử dụng để quản lý mã nguồn trong các dự án phần mềm. Nó được Linus Torvalds phát triển vào năm 2005 và đã trở thành một công cụ không thể thiếu trong cộng đồng phần mềm mã nguồn mở. Git giúp các nhà phát triển dễ dàng và hiệu quả làm việc trên các phiên bản khác nhau của cùng một dự án, từ đó hỗ trợ quản lý và giám sát quá trình phát triển phần mềm. \\[0.5cm]
-Nhóm của chúng tôi đã lựa chọn \textbf{GitHub} để quản lý mã nguồn. GitHub là một dịch vụ lưu trữ mã nguồn trực tuyến (source code repository) và nền tảng hợp tác phát triển phần mềm dựa trên Git. GitHub cho phép các nhà phát triển lưu trữ, quản lý và chia sẻ mã nguồn của các dự án phần mềm.
+Nhóm đã lựa chọn \textbf{GitHub} để quản lý mã nguồn. GitHub là một dịch vụ lưu trữ mã nguồn trực tuyến (source code repository) và nền tảng hợp tác phát triển phần mềm dựa trên Git. GitHub cho phép các nhà phát triển lưu trữ, quản lý và chia sẻ mã nguồn của các dự án phần mềm.\\[0.5cm]
+Ngoài ra, để việc đóng góp của các thành viên được diễn ra một cách bài bản và khoa học, nhóm đã định ra một bộ quy tắc về cách đặt tên branch, cách tạo, duyệt, gộp nội dung từ pull request vào branch chính, sẽ được trình bày cụ thể hơn ở phần phụ lục.
 
 \subsection{Cấu trúc mã nguồn}
+\noindent Nhóm đã tận dụng Github để quản lý mã nguồn cho 2 nội dung quan trọng nhất của đồ án, là báo cáo (được viết bằng Latex) và hệ thống, tương ứng với 2 repository. Mỗi repository đều có README ghi chú đầy đủ các nội dung hướng dẫn, giúp mỗi thành viên có thể nắm được các thông tin cơ bản của repository, đồng thời thực hiện các bước thiết lập nếu cần, trước khi có thể đóng góp nội dung vào đó.
+\subsubsection{Mã nguồn báo cáo}
+\noindent Do nội dung báo cáo không ít, do đó nhóm không ghi hết toàn bộ nội dung vào 1 file tex duy nhất, mà được chia ra thành nhiều file với cấu trúc như hình \ref{fig:thesis_source_code_structure}:
+\begin{itemize}
+    \item Thư mục \textbf{images}: Chứa toàn bộ các hình ảnh được sử dụng cho báo cáo. Bên trong còn được chia ra thành nhiều thư mục con, ứng với từng thành viên. Mỗi thành viên sẽ tự quản lý những hỉnh ảnh mà mình sử dụng trong báo cáo.
+    \item Thư mục \textbf{sections}: Chứa nội dung của các chương trong báo cáo. Mỗi chương sẽ là 1 file tex riêng.
+    \item File \textbf{main.tex}: Là khung xương của toàn bộ báo cáo, chứa các thiết lập, đồng thời là điểm bắt đầu để latex có thể biên tập nội dung.
+    \item File \textbf{README.md}: Chứa đựng các thông tin cần thiết về repository. 
+\end{itemize}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[scale = 1.5]{images/hanh/thesis-source-code-screenshot.png}
+        \vspace*{2mm}
+    \end{center}
+    \caption{Cấu trúc mã nguồn của báo cáo}
+    \label{fig:thesis_source_code_structure}
 
-
+\end{figure}
+\subsubsection{Mã nguồn hệ thống}
 \section{Giao diện hệ thống}
