@@ -1,303 +1,5 @@
-\chapter{Kiểm thử, triển khai và đánh giá hệ thống}
-\section{Triển khai hệ thống}
-\subsection{Triển khai frontend và backend}
-\noindent Sau khi có một ứng dụng hoàn chỉnh, có thể hiển thị được thông tin mặt hàng, ta đóng gói nó thành Docker image và đẩy lên Docker Hub.\\[0.5cm]
-Dockerfile của frontend có nội dung như sau:
-\begin{lstlisting}[language=docker]
-# Use an official Node runtime as a parent image
-FROM node:18 AS builder
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy package.json and package-lock.json to the container
-COPY package.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code to the container
-COPY . .
-
-# Build the Vite React application
-RUN npm run build
-
-# Use an official Nginx runtime as a parent image
-FROM nginx:alpine
-
-# Copy the build output from the builder stage to the nginx web root
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Expose port 80
-EXPOSE 80
-\end{lstlisting}
-
-Dockerfile của backend có nội dung như sau:
-
-\begin{lstlisting}[language=docker]
-# Use an official OpenJDK runtime as a base image with Java 17
-FROM eclipse-temurin:17-jdk-alpine
-
-# Set the working directory to /app
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Build the Spring Boot application
-RUN ./mvnw package -DskipTests
-
-# Expose the port that your Spring Boot application will run on
-EXPOSE 80
-
-# Define the command to run your application
-CMD ["java", "-jar", "target/catalog-0.0.1-SNAPSHOT.jar"]
-\end{lstlisting}
-
-\subsection{Hiện thực Deployment và Service}
-\noindent Ta sử dụng terraform để khởi tạo các service trên, tương ứng với mỗi microservice frontend và backend.
-\subsubsection{Với frontend}
-\noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
-\begin{lstlisting}[language=terraform]
-resource "kubernetes_deployment" "catalog-fe-deploy" {
-  metadata {
-    name = "catalog-fe-deploy"
-    labels = { app = "catalog-fe", tier = "frontend" }
-  }
-  spec {
-    replicas = 1
-    selector {
-      match_labels = { app = "catalog-fe-pod", tier = "frontend" }
-    }
-    template {
-      metadata {
-        name = "catalog-fe-pod"
-        labels = { app = "catalog-fe-pod", tier = "frontend"}
-      }
-      spec {
-        container {
-          name = "catalog-fe"
-          image = "hoanganhleboy/catalog-fe:latest"
-          port { container_port = 80 }
-          env {
-            name = "CONTENT"
-            value = "This is the string from k8s"
-          }
-          image_pull_policy = "Always"
-        }
-      }
-    }
-  }
-}
-
-resource "kubernetes_service" "catalog-fe-service" {
-  metadata {
-    name = "catalog-fe-service"
-    labels = { app = "catalog-fe-service", tier = "frontend" }
-  }
-  spec {
-    selector = { app = "catalog-fe-pod", tier = "frontend"}
-    port {
-      protocol = "TCP"
-      port = 80
-      target_port = 80
-    }
-    type = "NodePort"
-  }
-}
-\end{lstlisting} 
-\subsubsection{Với backend}
-\noindent Catalog microservice sau khi được build thành image sẽ được chạy từ file .jar, thông qua JVM.
-\begin{lstlisting}[language=terraform]
-resource "kubernetes_deployment" "catalog-ms-deploy" {
-  metadata {
-    name = "catalog-ms-deploy"
-    labels = { app = "catalog-ms", tier = "backend" }
-  }
-  spec {
-    replicas = 1
-    selector {
-      match_labels = { app = "catalog-ms-pod", tier = "backend" }
-    }
-    template {
-      metadata {
-        name = "catalog-ms-pod"
-        labels = { app = "catalog-ms-pod", tier = "backend"}
-      }
-      spec {
-        container {
-          name = "catalog-ms"
-          image = "hoanganhleboy/catalog-ms"
-          port { container_port = 8090 } // This port the same with port in the code.
-          resources {
-            requests = {
-              cpu = "256m"
-              memory = "128Mi"
-            }
-            limits = {
-              cpu = "256m"
-              memory = "128Mi"
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-resource "kubernetes_service" "catalog-ms-service" {
-  metadata {
-    name = "catalog-ms-service"
-    labels = { app = "catalog-ms-service", tier = "backend" }
-  }
-  spec {
-    selector = { app = "catalog-ms-pod", tier = "backend"}
-    port {
-      protocol = "TCP"
-      port = 8090 // port expose to outside
-      target_port = 80 // This port the same with port in the code.
-    }
-    type = "NodePort"
-  }
-}
-\end{lstlisting}
-\subsection{Hiện thực Ingress}
-\noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
-\begin{lstlisting}[language=yaml]
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: example-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/enable-directory-listing: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-spec:
-  rules:
-    - http:
-        paths:
-          - pathType: Prefix
-            path: /backend(/|$)(.*)
-            backend:
-              service:
-                name: catalog-ms-service
-                port:
-                  number: 80
-          - pathType: Prefix
-            path: /frontend/?(.*)
-            # path: /
-            backend:
-              service:
-                name: catalog-fe-service
-                port:
-                  number: 80
----
-
-\end{lstlisting}
-\subsection{Hiện thực Horizontal Pod Autoscaler}
-\noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. HPA được hiện thực như sau:
-\begin{lstlisting}[language=yaml]
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: catalog-ms-hpa
-spec:
-  maxReplicas: 10
-  metrics:
-  - resource:
-      name: cpu
-      target:
-        averageUtilization: 10
-        type: Utilization
-    type: Resource
-  minReplicas: 1
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: catalog-ms-deploy
-  behavior:
-    scaleUp:
-      selectPolicy: Max
-      stabilizationWindowSeconds: 60
-      policies:
-      # number of pods that scale in a period of time
-        - periodSeconds: 30
-          type: Pods
-          value: 4
-    scaleDown:
-      selectPolicy: Min
-      stabilizationWindowSeconds: 60
-      policies:
-      # number of pods that scale in a period of time
-        - periodSeconds: 30
-          type: Pods
-          value: 4
-\end{lstlisting}
-\section{Kiểm thử hệ thống}
-\subsection{Thiết lập}
-\noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
-\begin{itemize}
-  \item \lstinline|minikube addons enable ingress|
-  \item \lstinline|minikube addons enable metrics-server|
-\end{itemize}
-Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
-Sau đó, ta sẽ chạy cặp lệnh \lstinline|terraform init| để terraform tải và thiết lập sẵn các dependency cần thiết, và \lstinline|terraform apply --auto-approve| để khởi tạo các dịch vụ Kubernetes được viết bằng terraform.\\[0.5cm]
-Với các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
-\subsection{Kiểm tra tính sẵn sàng - availability}
-\noindent Để kiểm tra tính sẵn sàng của hệ thống, ta sẽ thử xóa pod đi xem chuyện gì sẽ xảy ra.\\[0.5cm]
-Đây là trạng thái ban đầu của các pod:
-\begin{figure}[H]
-  \begin{center}
-  \includegraphics[scale=0.45]{images/hanh/pod_before_delete.png}
-  \caption{Hình ảnh trước khi xóa pod}
-  \end{center}
-\end{figure}
-Còn đây là hình ảnh sau khi vừa xóa:
-\begin{figure}[H]
-  \begin{center}
-  \includegraphics[scale=0.45]{images/hanh/pod_after_delete.png}
-  \caption{Hình ảnh sau khi vừa xóa pod}
-  \end{center}
-\end{figure}
-Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
-\subsection{Kiểm tra tính mở rộng - scalability}
-\subsubsection{Manual scaling}
-\noindent Tính mở rộng là việc hệ thống có thể tạo ra thêm nhiều bản sao của microservice, chạy song song với nhau nhằm đáp ứng được lượng request trên giây tương ứng của người dùng. Với Kubernetes, ta có thể dễ dàng scale up hay scale down hệ thống bằng tay thông qua việc điều chỉnh miền \lstinline|replicas| trong file config của Deployment.\\[0.5cm]
-Ví dụ như hình 5.3 dưới đây, khi ta tăng số lượng pod của catalog-ms từ 1 lên 3
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_up.png}
-    \caption{Hình ảnh khi scale số pod từ 1 lên 3}
-  \end{center}
-\end{figure}
-Ngay lập tức đã có thêm 2 pod mới được tạo ra như hình. Sau đó, khi ta giảm xuống 1 lại thì:
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_down.png}
-    \caption{Hình ảnh khi scale số pod từ 3 xuống 1}
-  \end{center}
-\end{figure}
-Như hình 5.4, ta thấy ngay lập tức có 2 pod bị xóa đi để đảm bảo số lượng pod trong cluster về đúng số lượng quy định.
-
-\subsubsection{Auto scaling}
-Tuy nhiên, trên thực tế, việc scale thủ công như trên sẽ gây tiêu tốn tài nguyên về cả nhân lực và vật lực kha khá, do cần phải có sự can thiệp trực tiếp của con người, và cũng cần con người giám sát 24/24 để đảm bảo có thể điều chỉnh lượng pod phù hợp với nhu cầu lúc đó. Do đó, tốt hơn hết là ta nên thiết lập để Kubernetes có thể thực hiện việc đó một cách tự động thay cho chúng ta, và đó là khi ta cần dùng tới HPA - Horizontal Pod Autoscaler.\\[0.5cm]
-Bài kiểm tra bao gồm các bước sau:
-\begin{enumerate}
-  \item Triển khai Deployment, Service, và HPA cho đối tượng muốn kiểm tra, ở đây là Catalog backend microservice.
-  \item Khởi tạo một pod có chứa container được chạy từ image busybox, pod này sẽ cung cấp cho chúng ta môi trường linux shell. Ta sau đó viết 1 đoạn script tạo một vòng lặp vô hạn gọi tới API của Catalog backend microservice.
-  \item Sử dụng câu lệnh \lstinline|kubectl get hpa --watch| để theo dõi trạng thái của HPA. Một thời gian sau, khi lượng pod đã được scale tới tối đa, ta tắt script để ngưng gọi API. 
-  \item Lại đợi một khoảng thời gian, số pod đã được scale về mức tối thiểu. 
-\end{enumerate}
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.19]{images/hanh/HPA_CPU_scale.png}
-    \caption{Kết quả cuộc thử nghiệm}
-  \end{center}
-\end{figure}
-\noindent \textbf{Mô tả thí nghiệm:} Trong hình 5.5, ta có thể thấy khi bắt đầu gọi API liên tục tới Catalog backend server, thì CPU load bắt đầu tăng mạnh. Khi CPU load vượt ngưỡng 10\% thì HPA sẽ được kích hoạt để tăng số pod trong deployment lên, nhằm mục đích làm giảm PCU load xuống. Tuy nhiên, một thời gian ngắn sau vì CPU load tiếp tục vượt ngưỡng nên HPA lại tiếp tục được kích hoạt tiếp để tăng thêm số pod ở deployment. Việc này chỉ dừng lại cho đến khi số pod đã đạt ngưỡng tối đa cho phép, hoặc CPU load ổn định không tiếp tục vượt ngưỡng nữa thì thôi.\\[0.5cm]
-Sau khi đã scale số pod lên đến mức tối đa là 10, ta terminate busybox đi để ngừng việc gửi request tới Catalog microservice. Lúc này CPU load giảm mạnh xuống còn 0\%. Sau một khoảng thời gian, HPA lại được kích hoạt để giảm số pod xuống. Khi giảm pod, nhận thấy CPU load vẫn tiếp tục dưới ngưỡng, HPA tiếp tục được kích hoạt để giảm tiếp số pod xuống, đến khi nào CPU load xấp xỉ với ngưỡng, hoặc khi đạt đến số pod tối thiểu, ở đây là 1 pod.
-
-\section{Xây dựng tính năng autoscaling với custom metrics (các thông số tùy chỉnh)}
-% Tham khảo chính từ 2 bài viết: https://dev.to/k6/how-to-autoscale-kubernetes-pods-with-keda-testing-with-k6-4nl9\influx-grafana và https://devopscube.com/setup-prometheus-monitoring-on-kubernetes/
+\chapter{Triển khai và kiểm thử hệ thống}
+\section{Xây dựng tính năng autoscaling với custom metrics (các thông số tùy chỉnh) (remove)}
 
 \subsection{Định nghĩa}
 \noindent Theo Google Cloud Platform\footnote{Dựa theo link: https://cloud.google.com/kubernetes-engine/docs/concepts/custom-and-external-metrics}, một \textit{custom metric} sẽ được truyền từ ứng dụng của bạn mà đang chạy trên Kubernetes.
@@ -492,7 +194,7 @@ K6 là một công cụ mã nguồn mở được đặc biệt thiết kế đ�
      \item \textbf{Hiệu suất mạnh mẽ}\\
      K6 được thiết kế để xử lý số lượng lớn yêu cầu đồng thời và đáp ứng trong thời gian thực. Điều này giúp các chuyên gia hiệu suất thực hiện kiểm tra trong các điều kiện khắc nghiệt mà vẫn duy trì độ chính xác cao.
 \end{itemize}
-\subsection{Các bước thực hiện}
+\subsection{Các bước thực hiện (chuyển tới phần triển khai)}
 \noindent Sau khi đã tìm hiểu các thành phần công nghê sẽ được sử dụng, ta sẽ cài đặt chúng vào Kubernetes cluster. Để có thể scale một service theo request, ta cần hiện thực các dịch vụ sau vào cluster:
 \begin{itemize}
   \item Prometheus server
@@ -803,7 +505,7 @@ spec:
       query: sum(rate(node_http_requests_total[1m]))
 \end{lstlisting}
 
-\subsection{Kiểm thử}
+\subsection{Kiểm thử (chuyển qua phần kiểm thử )}
 \subsubsection{Thiết lập}
 \noindent Ta sử dụng một tool chuyên dùng để tạo các request gọi tới hệ thống tên là k6, để chạy bài stress test trong các bài kiểm tra lần này. Tool này cho phép ta thiết lập bài kiểm tra bằng javascript thông qua việc \lstinline|export| các biến đã được thống nhất từ trước.\\[0.5cm]
 Cấu hình của bài kiểm tra có dạng như sau:
@@ -830,20 +532,7 @@ export default function () {
 }
 \end{lstlisting}
 Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
-\subsubsection{Kiểm tra khả năng mở rộng của dịch vụ với ScaledObject}
-\noindent Trước khi sử dụng một công nghệ nào đó, ta cần xác định xem công nghệ đó có hoạt động như cách ta mong muốn hay không. Ở đây thì ta sẽ kiểm tra xem khi áp dụng ScaledObject thì microservice \textbf{Catalog} có tự scale lên và scale xuống như lý thuyết hay không.\\[0.5cm]
-Để theo dõi trạng thái của HPA trong một khoảng thời gian liên tục, ta sử dụng lệnh \lstinline|kubectl get hpa --watch|. Sau đó, ta tiến hành khởi động bài kiểm tra bằng lệnh \lstinline|k6 run api-stress-test.js|.\\[0.5cm]
-Sau khi bài kiểm tra kết thúc, ta thu thập được kết quả thông qua terminal như hình dưới.
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.55]{images/hanh/test-with-hpa-pod-scaling.png}
-    \caption{Số lượng các pod thay đổi khi chạy bài kiểm tra với k6}
-  \end{center}
-  \label{}
-\end{figure}
-Thông qua hình trên, ta dễ thấy được là ScaledObject đã làm tốt công việc của mình, khi có thể tự động scale lên số pod từ 1 lên 10 khi lượng request tăng, và khi lượng request giảm được một thời gian, thì đã scale xuống lại về 1.
 
-\subsubsection{Kiểm tra tính hiệu quả của việc auto scaling thông qua số request}
 \noindent Sau khi đã chắc chắn rằng ScaledObject có thể giúp ta scale số pod của microservice dựa theo lượng request, thì ta cần kiếm chứng tính hiệu quả của các thiết lập mà ta đã đưa vào hệ thống.\\[0.5cm]
 Đầu tiên, ta tiến hành chạy bài kiểm tra khi dịch vụ chưa được cung cấp HPA, và kiểm tra xem dịch vụ có thể phục vụ được bao nhiêu trong tổng số request đã được gửi tới hệ thống. Ta được kết quả như hình dưới.
 \begin{figure}[H]
@@ -873,6 +562,320 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 \end{figure}
 Đi tìm hiểu sâu hơn về các chỉ số các pod của Catalog microservice, ta nhận thấy rằng chỉ có một vài pod (được đánh dấu đỏ trên hình), là được sử dụng gần hết công suất, thông qua việc chỉ số CPU ultilization gần tối đa. Đây là biểu hiện của việc lượng tải được phân bố không đều vào các pod, từ đó dẫn đến pod thì bị quá tải, pod thì chạy với rất ít tải. Nguyên nhân dẫn đến hành vi này là do môi trường giả lập Kubernetes cluster trên local không cung cấp được load balancer cho Kubernetes cluster, do đó việc chia tải từ Kubernetes service vào các pod diễn ra theo trình tự ngẫu nhiên, dẫn tới hiện tượng như miêu tả trên hình.\\[0.5cm]
 \textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.
+
+\section{Triển khai hệ thống}
+\subsection{Triển khai frontend và backend}
+\noindent Sau khi có một ứng dụng hoàn chỉnh, có thể hiển thị được thông tin mặt hàng, ta đóng gói nó thành Docker image và đẩy lên Docker Hub.\\[0.5cm]
+Dockerfile của frontend có nội dung như sau:
+\begin{lstlisting}[language=docker]
+# Use an official Node runtime as a parent image
+FROM node:18 AS builder
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the container
+COPY package.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application code to the container
+COPY . .
+
+# Build the Vite React application
+RUN npm run build
+
+# Use an official Nginx runtime as a parent image
+FROM nginx:alpine
+
+# Copy the build output from the builder stage to the nginx web root
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+\end{lstlisting}
+
+Dockerfile của backend có nội dung như sau:
+
+\begin{lstlisting}[language=docker]
+# Use an official OpenJDK runtime as a base image with Java 17
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Build the Spring Boot application
+RUN ./mvnw package -DskipTests
+
+# Expose the port that your Spring Boot application will run on
+EXPOSE 80
+
+# Define the command to run your application
+CMD ["java", "-jar", "target/catalog-0.0.1-SNAPSHOT.jar"]
+\end{lstlisting}
+
+\subsection{Hiện thực Deployment và Service}
+\noindent Ta sử dụng terraform để khởi tạo các service trên, tương ứng với mỗi microservice frontend và backend.
+\subsubsection{Với frontend}
+\noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
+\begin{lstlisting}[language=terraform]
+resource "kubernetes_deployment" "catalog-fe-deploy" {
+  metadata {
+    name = "catalog-fe-deploy"
+    labels = { app = "catalog-fe", tier = "frontend" }
+  }
+  spec {
+    replicas = 1
+    selector {
+      match_labels = { app = "catalog-fe-pod", tier = "frontend" }
+    }
+    template {
+      metadata {
+        name = "catalog-fe-pod"
+        labels = { app = "catalog-fe-pod", tier = "frontend"}
+      }
+      spec {
+        container {
+          name = "catalog-fe"
+          image = "hoanganhleboy/catalog-fe:latest"
+          port { container_port = 80 }
+          env {
+            name = "CONTENT"
+            value = "This is the string from k8s"
+          }
+          image_pull_policy = "Always"
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "catalog-fe-service" {
+  metadata {
+    name = "catalog-fe-service"
+    labels = { app = "catalog-fe-service", tier = "frontend" }
+  }
+  spec {
+    selector = { app = "catalog-fe-pod", tier = "frontend"}
+    port {
+      protocol = "TCP"
+      port = 80
+      target_port = 80
+    }
+    type = "NodePort"
+  }
+}
+\end{lstlisting} 
+\subsubsection{Với backend}
+\noindent Catalog microservice sau khi được build thành image sẽ được chạy từ file .jar, thông qua JVM.
+\begin{lstlisting}[language=terraform]
+resource "kubernetes_deployment" "catalog-ms-deploy" {
+  metadata {
+    name = "catalog-ms-deploy"
+    labels = { app = "catalog-ms", tier = "backend" }
+  }
+  spec {
+    replicas = 1
+    selector {
+      match_labels = { app = "catalog-ms-pod", tier = "backend" }
+    }
+    template {
+      metadata {
+        name = "catalog-ms-pod"
+        labels = { app = "catalog-ms-pod", tier = "backend"}
+      }
+      spec {
+        container {
+          name = "catalog-ms"
+          image = "hoanganhleboy/catalog-ms"
+          port { container_port = 8090 } // This port the same with port in the code.
+          resources {
+            requests = {
+              cpu = "256m"
+              memory = "128Mi"
+            }
+            limits = {
+              cpu = "256m"
+              memory = "128Mi"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "catalog-ms-service" {
+  metadata {
+    name = "catalog-ms-service"
+    labels = { app = "catalog-ms-service", tier = "backend" }
+  }
+  spec {
+    selector = { app = "catalog-ms-pod", tier = "backend"}
+    port {
+      protocol = "TCP"
+      port = 8090 // port expose to outside
+      target_port = 80 // This port the same with port in the code.
+    }
+    type = "NodePort"
+  }
+}
+\end{lstlisting}
+\subsection{Hiện thực Ingress}
+\noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
+\begin{lstlisting}[language=yaml]
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/enable-directory-listing: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - http:
+        paths:
+          - pathType: Prefix
+            path: /backend(/|$)(.*)
+            backend:
+              service:
+                name: catalog-ms-service
+                port:
+                  number: 80
+          - pathType: Prefix
+            path: /frontend/?(.*)
+            # path: /
+            backend:
+              service:
+                name: catalog-fe-service
+                port:
+                  number: 80
+---
+
+\end{lstlisting}
+\subsection{Hiện thực Horizontal Pod Autoscaler}
+\noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. HPA được hiện thực như sau:
+\begin{lstlisting}[language=yaml]
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: catalog-ms-hpa
+spec:
+  maxReplicas: 10
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 10
+        type: Utilization
+    type: Resource
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: catalog-ms-deploy
+  behavior:
+    scaleUp:
+      selectPolicy: Max
+      stabilizationWindowSeconds: 60
+      policies:
+      # number of pods that scale in a period of time
+        - periodSeconds: 30
+          type: Pods
+          value: 4
+    scaleDown:
+      selectPolicy: Min
+      stabilizationWindowSeconds: 60
+      policies:
+      # number of pods that scale in a period of time
+        - periodSeconds: 30
+          type: Pods
+          value: 4
+\end{lstlisting}
+\section{Kiểm thử tính chất thành phần}
+\subsection{Thiết lập}
+\noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
+\begin{itemize}
+  \item \lstinline|minikube addons enable ingress|
+  \item \lstinline|minikube addons enable metrics-server|
+\end{itemize}
+Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
+Sau đó, ta sẽ chạy cặp lệnh \lstinline|terraform init| để terraform tải và thiết lập sẵn các dependency cần thiết, và \lstinline|terraform apply --auto-approve| để khởi tạo các dịch vụ Kubernetes được viết bằng terraform.\\[0.5cm]
+Với các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
+\subsection{Kiểm tra tính sẵn sàng - availability}
+\subsubsection{Kiểm tra tính sẵn sàng của pod được triển khai bởi Deployment}
+\noindent Để kiểm tra tính sẵn sàng của hệ thống, ta sẽ thử xóa pod đi xem chuyện gì sẽ xảy ra.\\[0.5cm]
+Đây là trạng thái ban đầu của các pod:
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[scale=0.45]{images/hanh/pod_before_delete.png}
+  \caption{Hình ảnh trước khi xóa pod}
+  \end{center}
+\end{figure}
+Còn đây là hình ảnh sau khi vừa xóa:
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[scale=0.45]{images/hanh/pod_after_delete.png}
+  \caption{Hình ảnh sau khi vừa xóa pod}
+  \end{center}
+\end{figure}
+Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
+\subsubsection*{Kiểm tra tính sẵn sàng với pod được triển khai bằng Statefulset}
+\subsection{Kiểm tra tính mở rộng - scalability}
+\subsubsection{Manual scaling}
+\noindent Tính mở rộng là việc hệ thống có thể tạo ra thêm nhiều bản sao của microservice, chạy song song với nhau nhằm đáp ứng được lượng request trên giây tương ứng của người dùng. Với Kubernetes, ta có thể dễ dàng scale up hay scale down hệ thống bằng tay thông qua việc điều chỉnh miền \lstinline|replicas| trong file config của Deployment.\\[0.5cm]
+Ví dụ như hình 5.3 dưới đây, khi ta tăng số lượng pod của catalog-ms từ 1 lên 3
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_up.png}
+    \caption{Hình ảnh khi scale số pod từ 1 lên 3}
+  \end{center}
+\end{figure}
+Ngay lập tức đã có thêm 2 pod mới được tạo ra như hình. Sau đó, khi ta giảm xuống 1 lại thì:
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_down.png}
+    \caption{Hình ảnh khi scale số pod từ 3 xuống 1}
+  \end{center}
+\end{figure}
+Như hình 5.4, ta thấy ngay lập tức có 2 pod bị xóa đi để đảm bảo số lượng pod trong cluster về đúng số lượng quy định.
+
+\subsubsection{Auto scaling}
+Tuy nhiên, trên thực tế, việc scale thủ công như trên sẽ gây tiêu tốn tài nguyên về cả nhân lực và vật lực kha khá, do cần phải có sự can thiệp trực tiếp của con người, và cũng cần con người giám sát 24/24 để đảm bảo có thể điều chỉnh lượng pod phù hợp với nhu cầu lúc đó. Do đó, tốt hơn hết là ta nên thiết lập để Kubernetes có thể thực hiện việc đó một cách tự động thay cho chúng ta, và đó là khi ta cần dùng tới HPA - Horizontal Pod Autoscaler.\\[0.5cm]
+Bài kiểm tra bao gồm các bước sau:
+\begin{enumerate}
+  \item Triển khai Deployment, Service, và HPA cho đối tượng muốn kiểm tra, ở đây là Catalog backend microservice.
+  \item Khởi tạo một pod có chứa container được chạy từ image busybox, pod này sẽ cung cấp cho chúng ta môi trường linux shell. Ta sau đó viết 1 đoạn script tạo một vòng lặp vô hạn gọi tới API của Catalog backend microservice.
+  \item Sử dụng câu lệnh \lstinline|kubectl get hpa --watch| để theo dõi trạng thái của HPA. Một thời gian sau, khi lượng pod đã được scale tới tối đa, ta tắt script để ngưng gọi API. 
+  \item Lại đợi một khoảng thời gian, số pod đã được scale về mức tối thiểu. 
+\end{enumerate}
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.19]{images/hanh/HPA_CPU_scale.png}
+    \caption{Kết quả cuộc thử nghiệm}
+  \end{center}
+\end{figure}
+\noindent \textbf{Mô tả thí nghiệm:} Trong hình 5.5, ta có thể thấy khi bắt đầu gọi API liên tục tới Catalog backend server, thì CPU load bắt đầu tăng mạnh. Khi CPU load vượt ngưỡng 10\% thì HPA sẽ được kích hoạt để tăng số pod trong deployment lên, nhằm mục đích làm giảm PCU load xuống. Tuy nhiên, một thời gian ngắn sau vì CPU load tiếp tục vượt ngưỡng nên HPA lại tiếp tục được kích hoạt tiếp để tăng thêm số pod ở deployment. Việc này chỉ dừng lại cho đến khi số pod đã đạt ngưỡng tối đa cho phép, hoặc CPU load ổn định không tiếp tục vượt ngưỡng nữa thì thôi.\\[0.5cm]
+Sau khi đã scale số pod lên đến mức tối đa là 10, ta terminate busybox đi để ngừng việc gửi request tới Catalog microservice. Lúc này CPU load giảm mạnh xuống còn 0\%. Sau một khoảng thời gian, HPA lại được kích hoạt để giảm số pod xuống. Khi giảm pod, nhận thấy CPU load vẫn tiếp tục dưới ngưỡng, HPA tiếp tục được kích hoạt để giảm tiếp số pod xuống, đến khi nào CPU load xấp xỉ với ngưỡng, hoặc khi đạt đến số pod tối thiểu, ở đây là 1 pod.
+
+\subsubsection{Auto scaling với custom metrics - ScaledObject}
+\noindent Trước khi sử dụng một công nghệ nào đó, ta cần xác định xem công nghệ đó có hoạt động như cách ta mong muốn hay không. Ở đây thì ta sẽ kiểm tra xem khi áp dụng ScaledObject thì microservice \textbf{Catalog} có tự scale lên và scale xuống như lý thuyết hay không.\\[0.5cm]
+Để theo dõi trạng thái của HPA trong một khoảng thời gian liên tục, ta sử dụng lệnh \lstinline|kubectl get hpa --watch|. Sau đó, ta tiến hành khởi động bài kiểm tra bằng lệnh \lstinline|k6 run api-stress-test.js|.\\[0.5cm]
+Sau khi bài kiểm tra kết thúc, ta thu thập được kết quả thông qua terminal như hình dưới.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.55]{images/hanh/test-with-hpa-pod-scaling.png}
+    \caption{Số lượng các pod thay đổi khi chạy bài kiểm tra với k6}
+  \end{center}
+  \label{}
+\end{figure}
+Thông qua hình trên, ta dễ thấy được là ScaledObject đã làm tốt công việc của mình, khi có thể tự động scale lên số pod từ 1 lên 10 khi lượng request tăng, và khi lượng request giảm được một thời gian, thì đã scale xuống lại về 1.
+
+
 \section{Kiểm thử hệ thống}
 \subsection{Kiểm thử API}
 \begin{itemize}
@@ -1119,3 +1122,8 @@ thực hiện kiểm tra các chức năng cụ thể sau đây:
   \caption{Kiểm thử các yêu cầu chức năng màn hình thanh toán}
   \label{tab:payment-table}
 \end{table}
+
+\subsection{Kiểm thử tính mở rộng - scalability}
+
+\subsubsection{Kiểm tra tính hiệu quả của việc auto scaling thông qua số request}
+\subsection{Kiểm thử tính sẵn sàng - availability}
