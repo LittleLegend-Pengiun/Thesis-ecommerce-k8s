@@ -1,4 +1,4 @@
-\chapter{Triển khai và kiểm thử hệ thống}
+\chapter{Triển khai, kiểm thử, và đánh giá hệ thống}
 \section{Xây dựng tính năng autoscaling với custom metrics (các thông số tùy chỉnh) (remove)}
 
 \subsection{Định nghĩa}
@@ -619,8 +619,7 @@ CMD ["java", "-jar", "target/catalog-0.0.1-SNAPSHOT.jar"]
 \end{lstlisting}
 
 \subsection{Triển khai Deployment và Service}
-\noindent Ta sử dụng terraform để khởi tạo các service trên, tương ứng với mỗi microservice frontend và backend.
-\subsubsection{Với frontend}
+\subsubsection*{Frontend}
 \noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
 \begin{lstlisting}[language=terraform]
 resource "kubernetes_deployment" "catalog-fe-deploy" {
@@ -670,7 +669,7 @@ resource "kubernetes_service" "catalog-fe-service" {
   }
 }
 \end{lstlisting} 
-\subsubsection{Với backend}
+\subsubsection*{Catalog microservice}
 \noindent Catalog microservice sau khi được build thành image sẽ được chạy từ file .jar, thông qua JVM.
 \begin{lstlisting}[language=terraform]
 resource "kubernetes_deployment" "catalog-ms-deploy" {
@@ -796,6 +795,8 @@ spec:
           type: Pods
           value: 4
 \end{lstlisting}
+\subsection{Triển khai Load balancer}
+\noindent TBD
 \section{Kiểm thử tính chất thành phần}
 \subsection{Thiết lập}
 \noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
@@ -824,7 +825,8 @@ Còn đây là hình ảnh sau khi vừa xóa:
   \end{center}
 \end{figure}
 Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
-\subsubsection*{Kiểm tra tính sẵn sàng với pod được triển khai bằng Statefulset}
+\subsubsection{Kiểm tra tính sẵn sàng với pod được triển khai bằng Statefulset}
+\noindent TBD
 \subsection{Kiểm tra tính mở rộng - scalability}
 \subsubsection{Manual scaling}
 \noindent Tính mở rộng là việc hệ thống có thể tạo ra thêm nhiều bản sao của microservice, chạy song song với nhau nhằm đáp ứng được lượng request trên giây tương ứng của người dùng. Với Kubernetes, ta có thể dễ dàng scale up hay scale down hệ thống bằng tay thông qua việc điều chỉnh miền \lstinline|replicas| trong file config của Deployment.\\[0.5cm]
@@ -1043,5 +1045,8 @@ thực hiện kiểm tra các chức năng cụ thể sau đây:
 
 \subsection{Kiểm thử tính mở rộng - scalability}
 
-\subsubsection{Kiểm tra tính hiệu quả của việc auto scaling thông qua số request}
 \subsection{Kiểm thử tính sẵn sàng - availability}
+
+\section{Đánh giá hệ thống}
+\subsection{Đánh giá tính hiệu quả của khả năng scalability}
+\subsection{Đánh giá tính hiệu quả của khả năng availability}
