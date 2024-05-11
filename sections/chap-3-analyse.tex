@@ -64,7 +64,7 @@
             % Bảng 3.1: 
         \end{center}
     \caption{Đặc tả use case đăng nhập}
-    \label{table:1}
+    \label{table:login}
     \end{table}
         
     \item \textbf{Đăng ký}
@@ -83,7 +83,7 @@
         \begin{center}
         \end{center}
         \caption{Đặc tả use case đăng ký tài khoản}
-        \label{table:1}
+        \label{table:signup}
     \end{table}
     \newpage
     \item \textbf{Xem sản phẩm}
@@ -102,7 +102,7 @@
         \begin{center}
         \end{center}
         \caption{Đặc tả use case xem sản phẩm}
-        \label{table:1}
+        \label{table:product}
         \end{table}
         
         \item \textbf{Quản lý giỏ hàng}
@@ -121,7 +121,7 @@
             \begin{center}
             \end{center}
             \caption{Đặc tả use case quản lý giỏ hàng}
-            \label{table:1}
+            \label{table:cart}
             \end{table}
         \newpage
         \item \textbf{Thanh toán}
@@ -140,7 +140,7 @@
                 \begin{center}
                 \end{center}
                 \caption{Đặc tả use case thanh toán}
-                \label{table:1}
+                \label{table:payment}
                 \end{table}
                 
         \item \textbf{Quản lý sản phẩm}
@@ -159,7 +159,7 @@
                 \begin{center}
                 \end{center}
                 \caption{Đặc tả use case quản lý sản phẩm}
-            \label{table:1}    
+            \label{table:product-manager}    
             \end{table}
             \newpage
             \item \textbf{Quản lý người dùng}
@@ -178,7 +178,7 @@
             \begin{center}
             \end{center}
             \caption{Đặc tả use case quản lý người dùng}
-            \label{table:1}
+            \label{table:user-manager}
             \end{table}
             \item \textbf{Xem thống kê doanh thu}
             \begin{table}[H]
@@ -196,7 +196,7 @@
                 \begin{center}
                 \end{center}
                 \caption{Đặc tả use case xem thống kê doanh thu}
-                \label{table:1}
+                \label{table:statistic}
                 \end{table}
     \end{itemize}
 \newpage
@@ -349,82 +349,97 @@
 \noindent \textbf{Ghi chú:} Đây chỉ là sơ đồ cho chức năng liên quan đến sản phẩm
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.5]{images/hieu/chap-3/database-diagram.png}
+    \includegraphics[scale=0.3]{images/hieu/chap-3/full-database-diagram.png}
     \caption{Entity Relationship Diagram - ERD}
 \end{figure}
 \subsubsection {Mô tả chi tiết thực thể}
 \begin{itemize}
-    \item \textbf{Product:} Thực thể này lưu trữ thông tin về sản phẩm của cửa hàng.
+    \item \textbf{Product:} Thực thể này lưu trữ thông tin về sản phẩm của cửa hàng
         \begin{table}[H]
-        \begin{tabular}{|l|l|l|}
+        \begin{tabular}{|p{3cm}|p{3cm}|p{8cm}|}
         \hline
         \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả}                            \\ \hline
         ID                  & int                   & Mã sản phẩm - khoá chính                  \\ \hline
         name                & varchar               & Tên sản phẩm                              \\ \hline
         desc                & text                  & Mô tả sản phẩm                            \\ \hline
-        SKU                 & varchar               & Kết hợp giữa mã sản phẩm và loại sản phẩm \\ \hline
+        manufacturer        & varchar               & Nhà sản xuất                              \\ \hline
+        release\_date       & date                  & Ngày ra mắt                               \\ \hline
         price               & decimal               & Giá của sản phẩm                          \\ \hline
+        stock               & int                   & Số lượng trong kho                        \\ \hline
         created\_at         & timestamp             & Thời gian tạo                             \\ \hline
-        modified\_at        & timestamp             & Thời gian điều chỉnh                      \\ \hline
+        updated\_at         & timestamp             & Thời gian cập nhật sản phẩm               \\ \hline
         image\_link         & string                & Liên kết chứa hỉnh ảnh sản phẩm           \\ \hline
         \end{tabular}
         \caption{Bảng mô tả Product}
         \label{table:1}
         \end{table}
-    \item \textbf{Product Category:} Thực thể này lưu trữ thông tin về loại sản phẩm của cửa hàng.
+    \item \textbf{User:} Thực thể này lưu trữ thông tin về người dùng hệ thống
             \begin{table}[H]
-                \begin{tabular}{|l|l|l|}
+                \begin{tabular}{|p{3cm}|p{3cm}|p{8cm}|}
                 \hline
                 \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả}                \\ \hline
-                ID                  & int                   & Mã loại sản phẩm - khoá chính \\ \hline
-                name                & varchar               & Tên loại sản phẩm             \\ \hline
-                desc                & text                  & Mô tả loại sản phẩm           \\ \hline
-                deleted\_at         & timestamp             & Thời giản xoá loại sản phẩm   \\ \hline
-                modified\_at        & timestamp             & Thời gian điều chỉnh          \\ \hline
-                created\_at         & timestamp             & Thời gian tạo                 \\ \hline
+                ID                  & int                   & Mã người dùng                 \\ \hline
+                name                & varchar               & Tên người dùng                \\ \hline
+                email               & varchar               & Email người dùng              \\ \hline
+                password            & varchar               & Mật khẩu người dùng           \\ \hline
+                fullname            & varchar               & Họ và tên người dùng          \\ \hline
+                phone               & varchar               & Số điện thoại người dùng      \\ \hline
+                address             & varchar               & Địa chỉ người dùng            \\ \hline
+                gender              & boolean               & Giới tính người dùng          \\ \hline
+                registration\_date  & timestamp             & Ngày đăng ký                  \\ \hline
+                date\_of\_birth      & date                  & Ngày sinh người dùng          \\ \hline
+                created\_at          & timestamp             & Thời gian tạo                 \\ \hline
+                updated\_at          & timestamp             & Thời gian cập nhật            \\ \hline
                 \end{tabular}
-                \caption{Bảng mô tả Product Catagory}
-                \label{table:1}
+                \caption{Bảng mô tả User}
+                \label{table:2}
                 \end{table}
-    \item \textbf{Product Inventory:} Thực thể này lưu trữ thông tin về kho lưu trữ sản phẩm của cửa hàng.
+    \item \textbf{Order:} Thực thể này lưu trữ thông tin các đơn hàng người dùng đã đặt
         \begin{table}[H]
-        \begin{tabular}{|l|l|l|}
-        \hline
-        \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả}                \\ \hline
-        ID                  & int                   & Mã loại sản phẩm - khoá chính \\ \hline
-        quantity            & int                   & Số lượng sản phẩm             \\ \hline
-        modified\_at        & timestamp             & Thời gian điều chỉnh          \\ \hline
-        created\_at         & timestamp             & Thời gian tạo                 \\ \hline
-        \end{tabular}
-        \caption{Bảng mô tả Product Inventory}
-        \label{table:1}
+            \begin{tabular}{|p{3cm}|p{3cm}|p{8cm}|}
+            \hline
+            \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả}                \\ \hline
+                ID                  & int                   & Mã đơn hàng                   \\ \hline
+                order\_date         & timestamp             & Ngày đặt hàng                 \\ \hline
+                total\_amount       & decimal               & Tổng số tiền                  \\ \hline
+                order\_status       & varchar               & Trạng thái đơn hàng           \\ \hline
+                payment\_method     & varchar               & Phương thức thanh toán        \\ \hline
+                shipping\_address   & varchar               & Địa chỉ giao hàng             \\ \hline
+                created\_at         & timestamp             & Thời gian tạo                 \\ \hline
+                updated\_at         & timestamp             & Thời gian cập nhật            \\ \hline
+                \end{tabular}
+                \caption{Bảng mô tả Order}
+                \label{table:3}
         \end{table}
-    \item \textbf{Discount:} Thực thể này lưu trữ thông tin về khuyến mãi của sản phẩm.
+    \item \textbf{Order Detail:} Thực thể này lưu trữ thông tin chi tiết của từng sản phẩm trong đơn hàng
         \begin{table}[H]
-        \begin{tabular}{|l|l|l|}
+        \begin{tabular}{|p{3cm}|p{3cm}|p{8cm}|}
         \hline
         \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả}           \\ \hline
-        ID                  & int                   & Mã giảm giá - khoá chính \\ \hline
-        name                & varchar               & Tên giảm giá             \\ \hline
-        desc                & text                  & Mô tả giảm giá           \\ \hline
-        discount\_percent   & decimal               & Phần trăm giảm giá       \\ \hline
-        created\_at         & timestamp             & Thời gian tạo            \\ \hline
-        deleted\_at         & timestamp             & Thời gian xoá            \\ \hline
-        Modified\_at        & timestamp             & Thời gian điều chỉnh     \\ \hline
+        ID                  & int                   & Mã đơn hàng    \\ \hline
+        quantity            & int                   & Số lượng       \\ \hline
+        unit\_price         & decimal               & Đơn giá        \\ \hline
+        shipping\_fee       & decimal               & Phí vận chuyển \\ \hline
+        created\_at         & timestamp             & Thời gian tạo  \\ \hline
+        updated\_at         & timestamp             & Thời gian cập nhật \\ \hline
         \end{tabular}
-        \caption{Bảng mô tả Discount}
-        \label{table:1}
+        \caption{Bảng mô tả Order Detail}
+        \label{table:4}
         \end{table}
-    \item \textbf{Attribute:} Đây là một thực thể yếu (phụ thuộc vào từng sản phẩm), nó lưu trữ thông tin thuộc tính của sản phẩm
+    \item \textbf{Notification:} Đây là một thực thể lưu trữ thông tin về thông báo hệ thống gửi cho người dùng
         \begin{table}[H]
-            \begin{tabular}{|l|l|l|}
+            \begin{tabular}{|p{3cm}|p{3cm}|p{8cm}|}
             \hline
             \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả}         \\ \hline
-            attribute\_name     & varchar               & Tên thuộc tính         \\ \hline
-            value               & text                  & Giá trị của thuộc tính \\ \hline
+            ID                  & int                   & Mã thông báo           \\ \hline
+            message             & text                  & Nội dung thông báo      \\ \hline
+            is\_read            & boolean               & Trạng thái đã đọc      \\ \hline
+            noti\_date         & timestamp             & Ngày thông báo         \\ \hline
+            created\_at         & timestamp             & Thời gian tạo          \\ \hline
+            updated\_at         & timestamp             & Thời gian cập nhật     \\ \hline
             \end{tabular}
-            \caption{Bảng mô tả Attribute}
-        \label{table:1}
+            \caption{Bảng mô tả Notification}
+        \label{table:5}
         \end{table}
 \end{itemize}
 
