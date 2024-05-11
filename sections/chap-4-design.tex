@@ -133,10 +133,10 @@
     \label{}
 \end{figure}
 \section{Thiết kế Database}
-\textbf{Thiết kế Database cho chức năng hiển thị sản phẩm}
+\textbf{Thiết kế Database cho các chức năng của hệ thống}
  \begin{figure}[H]
     \begin{center}
-    \includegraphics[scale = 0.8]{images/phat/DB_catalog.jpg}
+    \includegraphics[scale = 0.4]{images/phat/DB_Design-release.png}
     \vspace*{7mm}
     \caption{Database cho hiển thị sản phẩm}
     \end{center}
@@ -144,16 +144,16 @@
 \end{figure}
 \textbf{\textit{Ghi chú:}}
 \begin{itemize}
-    \item [-] 1..*: Mối quan hệ 1-N.
-    \item [-] 1..1: Mối quan hệ 1-1.
-    \item [-] *..*: Mối quan hệ N-N.
+    \item 1..*: Mối quan hệ 1-N.
+    \item 1..1: Mối quan hệ 1-1.
+    \item *..*: Mối quan hệ N-N.
 \end{itemize}
 \noindent{\textbf{Mô tả:}}\\[0.5cm]
 \noindent Cấu trúc database cho hiển thị danh sách sản phẩm gồm có 05 bảng dữ liệu:
 \begin{itemize}
-    \item [-] Bảng product: chứa thông tin chi tiết sản phẩm.
-    \item [-] Bảng product\_category: chứa thông tin loại sản phẩm.
-    \item [-] Bảng product\_inventory: chứa thông tin nơi lưu trữ sản phẩm.
-    \item [-] Bảng discount: chứa thông tin về giảm giá.
-    \item [-] Bảng attribute: chứa thông tin về thuộc tính của sản phẩm.
+    \item Bảng Product: chứa thông tin chi tiết sản phẩm.
+    \item Bảng Order: chứa thông tin tất cả đơn hàng.
+    \item Bảng Order\_Detail: chứa thông tin chi tiết đơn hàng, 
+    \item Bảng User: chứa thông tin người dùng hệ thống.
+    \item Bảng Notification: chứa thông tin các thông báo của người dùng
 \end{itemize}
