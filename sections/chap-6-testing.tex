@@ -618,7 +618,7 @@ EXPOSE 80
 CMD ["java", "-jar", "target/catalog-0.0.1-SNAPSHOT.jar"]
 \end{lstlisting}
 
-\subsection{Hiện thực Deployment và Service}
+\subsection{Triển khai Deployment và Service}
 \noindent Ta sử dụng terraform để khởi tạo các service trên, tương ứng với mỗi microservice frontend và backend.
 \subsubsection{Với frontend}
 \noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
@@ -725,7 +725,7 @@ resource "kubernetes_service" "catalog-ms-service" {
   }
 }
 \end{lstlisting}
-\subsection{Hiện thực Ingress}
+\subsection{Triển khai Ingress}
 \noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
 \begin{lstlisting}[language=yaml]
 apiVersion: networking.k8s.io/v1
@@ -757,7 +757,7 @@ spec:
 ---
 
 \end{lstlisting}
-\subsection{Hiện thực Horizontal Pod Autoscaler}
+\subsection{Triển khai Horizontal Pod Autoscaler}
 \noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. HPA được hiện thực như sau:
 \begin{lstlisting}[language=yaml]
 apiVersion: autoscaling/v2
@@ -905,88 +905,6 @@ Thông qua hình trên, ta dễ thấy được là ScaledObject đã làm tốt
 \subsection{Kiểm thử yêu cầu chức năng cho ứng dụng web}
 Để kiểm tra tính đúng đắn của hệ thống so với các yêu cầu đặt ra ban đầu cho ứng dụng web, nhóm
 thực hiện kiểm tra các chức năng cụ thể sau đây:
-% \subsubsection{Màn hình trang chủ}
-% \begin{itemize}
-%   \item \textbf{Hiển thị danh sách sản phẩm}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách tất cả sản phẩm của cửa hàng, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá.Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Tìm kiếm sản phẩm}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm phù hợp với từ khóa tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với từ khóa tìm kiếm, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Lọc sản phẩm theo khoảng giá}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm có giá trong khoảng giá tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với khoảng giá tìm kiếm, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Lọc sản phẩm theo danh mục}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm thuộc danh mục tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với danh mục tìm kiếm, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-% \end{itemize}
-% \subsubsection{Màn hình chi tiết sản phẩm}
-% \begin{itemize}
-%   \item \textbf{Hiển thị thông tin chi tiết sản phẩm}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Click vào sản phẩm cần xem chi tiết
-%       \item Kết quả mong đợi: Hiển thị đầy đủ thông tin chi tiết của sản phẩm, bao gồm tên, giá, hình ảnh, mô tả, số lượng đã bán, đánh giá, số lượng tồn kho, hãng sản xuất, danh mục, ngày tạo, ngày ra mắt.
-%       \item Kết quả thực tế: Thông tin chi tiết sản phẩm được hiển thị đúng, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Thêm sản phẩm vào giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào sản phẩm cần thêm vào giỏ hàng, chọn số lượng cần mua, chọn nút "Thêm vào giỏ hàng"
-%       \item Kết quả mong đợi: Hiển thị thông báo thêm sản phẩm vào giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng tăng lên.
-%       \item Kết quả thực tế: Thông báo thêm sản phẩm vào giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng tăng lên đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-% \end{itemize}
-% \subsubsection{Màn hình giỏ hàng}
-% \begin{itemize}
-%   \item \textbf{Hiển thị thông tin giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm trong giỏ hàng, mỗi sản phẩm bao gồm thông tin cơ bản như tên, giá, hình ảnh, số lượng, tổng tiền. Hiển thị tổng số lượng sản phẩm, tổng tiền cần thanh toán.
-%       \item Kết quả thực tế: Danh sách sản phẩm trong giỏ hàng được hiển thị đúng, đầy đủ thông tin cần thiết. Tổng số lượng sản phẩm, tổng tiền cần thanh toán được hiển thị đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Xóa sản phẩm khỏi giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng, chọn nút xóa tương ứng với sản phẩm cần xóa
-%       \item Kết quả mong đợi: Hiển thị thông báo xóa sản phẩm khỏi giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng giảm đi.
-%       \item Kết quả thực tế: Thông báo xóa sản phẩm khỏi giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng giảm đi đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Cập nhật số lượng sản phẩm trong giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng, điều chỉnh số lượng mong muốn, hệ thống sẽ tự động cập nhật theo số lượng mới
-%       \item Kết quả mong đợi: Hiển thị thông báo cập nhật số lượng sản phẩm trong giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng được cập nhật.
-%       \item Kết quả thực tế: Thông báo cập nhật số lượng sản phẩm trong giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng được cập nhật đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-% \end{itemize}
-% \subsubsection{Màn hình đăng nhập}
 \subsubsection{Màn hình trang chủ}
 \begin{table}[H]
   \centering
