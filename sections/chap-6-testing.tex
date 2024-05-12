@@ -254,39 +254,48 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 \textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.
 
 \section{Triển khai hệ thống}
-\subsection{Triển khai frontend và backend}
-\noindent Sau khi có một ứng dụng hoàn chỉnh, có thể hiển thị được thông tin mặt hàng, ta đóng gói nó thành Docker image và đẩy lên Docker Hub.\\[0.5cm]
-Dockerfile của frontend có nội dung như sau:
+\subsection{Đóng gói các microservice thành các image}
+\noindent Sau khi có một ứng dụng hoàn chỉnh, ta đóng gói nó thành Docker image và đẩy lên Docker Hub. Cách mỗi đóng gói mỗi mircroservice sẽ được trình bày bên dưới.\\[0.5cm]
+
+\subsubsection*{Frontend}
+
 \begin{lstlisting}[language=docker]
-# Use an official Node runtime as a parent image
-FROM node:18 AS builder
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy package.json and package-lock.json to the container
-COPY package.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code to the container
-COPY . .
-
-# Build the Vite React application
-RUN npm run build
-
 # Use an official Nginx runtime as a parent image
 FROM nginx:alpine
-
+  
 # Copy the build output from the builder stage to the nginx web root
-COPY --from=builder /app/dist /usr/share/nginx/html
-
+COPY dist /usr/share/nginx/html
+  
 # Expose port 80
 EXPOSE 80
 \end{lstlisting}
 
-Dockerfile của backend có nội dung như sau:
+\subsubsection*{Catalog microservice}
+
+\begin{lstlisting}[language=docker]
+# Use an official Node.js 18 runtime as a base image
+FROM node:18.18.2-alpine3.18
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install application dependencies
+RUN npm install
+
+# Copy the application code to the container
+COPY . .
+
+# Expose the port on which your application will run
+EXPOSE 8080
+
+# Define the command to run your application
+CMD ["npm", "start"]
+\end{lstlisting}
+
+\subsubsection*{Catalog database microservice}
 
 \begin{lstlisting}[language=docker]
 # Use an official OpenJDK runtime as a base image with Java 17
@@ -296,123 +305,333 @@ FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-COPY . /app
-
-# Build the Spring Boot application
-RUN ./mvnw package -DskipTests
+COPY target/*.jar /app/catalog-db.jar
 
 # Expose the port that your Spring Boot application will run on
-EXPOSE 80
+EXPOSE 8090
 
 # Define the command to run your application
-CMD ["java", "-jar", "target/catalog-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "catalog-db.jar"]
 \end{lstlisting}
 
+\subsubsection*{Authentication microservice}
+
+\begin{lstlisting}[language=docker]
+# Use official golang image with version 1.16.6 as the base image
+FROM golang:1.21.6-alpine3.19 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the Go application
+RUN go build -o authenms
+
+# Start a new stage from scratch
+FROM alpine:latest  
+
+# Set environment variables
+ENV PORT=8081
+
+# Set the working directory inside the container
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/authenms .
+
+# Copy the .env file from builder stage
+COPY --from=builder /app/.env .
+
+# Expose port 8080
+EXPOSE 8081
+
+# Command to run the executable
+CMD ["./authenms"]
+\end{lstlisting}
+
+\subsubsection*{Authentication database microservice}
+\begin{lstlisting}[language=docker]
+# Use official golang image with version 1.16.6 as the base image
+FROM golang:1.21.6-alpine3.19 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the Go application
+RUN go build -o authendb
+
+# Start a new stage from scratch
+FROM alpine:latest  
+
+# Set environment variables
+ENV PORT=9091
+
+# Set the working directory inside the container
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/authendb .
+
+# Copy the .env file from builder stage
+COPY --from=builder /app/.env .
+
+# Expose port 8080
+EXPOSE 9091
+
+# Command to run the executable
+CMD ["./authendb"]
+\end{lstlisting}
+
+\subsubsection*{Order microservice}
+\begin{lstlisting}[language=docker]
+# Use an official OpenJDK runtime as a base image with Java 17
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY target/*.jar /app/order-ms.jar
+
+# Build the Spring Boot application
+# RUN ./mvnw package -DskipTests
+
+# Expose the port that your Spring Boot application will run on
+EXPOSE 8082
+
+# Define the command to run your application
+CMD ["java", "-jar", "order-ms.jar"]
+\end{lstlisting}
+
+\subsubsection*{Order database microservice}
+\begin{lstlisting}[language=docker]
+# Use an official OpenJDK runtime as a base image with Java 17
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY target/*.jar /app/order-db.jar
+
+# Expose the port that your Spring Boot application will run on
+EXPOSE 9092
+
+# Define the command to run your application
+CMD ["java", "-jar", "order-db.jar"]
+\end{lstlisting}
+
+\subsubsection*{Notification microservice}
+\begin{lstlisting}[language=docker]
+# Stage 1: Build TypeScript code
+FROM node:18.18.2-alpine3.18 as builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN yarn
+
+# Copy the rest of the application code
+COPY . .
+
+# Compile TypeScript code
+RUN npx tsc
+
+# Stage 2: Create production image
+FROM node:18.18.2-alpine3.18
+
+# Set working directory
+WORKDIR /app
+
+# Copy only necessary files from the builder stage
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/.env ./
+RUN npm install --production
+
+# Expose port (if your application listens on a specific port)
+EXPOSE 8083
+
+# Command to run the application
+CMD ["node", "./dist/index.js"]
+\end{lstlisting}
+
+\subsubsection*{Notification database microservice}
+\begin{lstlisting}[language=docker]
+# Use official golang image with version 1.16.6 as the base image
+FROM golang:1.21.6-alpine3.19 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the Go application
+RUN go build -o notidb
+
+# Start a new stage from scratch
+FROM alpine:latest  
+
+# Set environment variables
+ENV PORT=9083
+
+# Set the working directory inside the container
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/notidb .
+
+# Copy the .env file from builder stage
+COPY --from=builder /app/.env .
+
+# Expose port 8080
+EXPOSE 9083
+
+# Command to run the executable
+CMD ["./notidb"]
+\end{lstlisting}
+
+\subsubsection*{RabbitMQ}
+\begin{lstlisting}[language=docker]
+FROM rabbitmq:management-alpine
+
+RUN rabbitmq-plugins enable rabbitmq_management
+
+EXPOSE 15672
+EXPOSE 5672
+\end{lstlisting}
 \subsection{Triển khai Deployment và Service}
 \subsubsection*{Frontend}
 \noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
-\begin{lstlisting}[language=terraform]
-resource "kubernetes_deployment" "catalog-fe-deploy" {
-  metadata {
-    name = "catalog-fe-deploy"
-    labels = { app = "catalog-fe", tier = "frontend" }
-  }
-  spec {
-    replicas = 1
-    selector {
-      match_labels = { app = "catalog-fe-pod", tier = "frontend" }
-    }
-    template {
-      metadata {
-        name = "catalog-fe-pod"
-        labels = { app = "catalog-fe-pod", tier = "frontend"}
-      }
-      spec {
-        container {
-          name = "catalog-fe"
-          image = "hoanganhleboy/catalog-fe:latest"
-          port { container_port = 80 }
-          env {
-            name = "CONTENT"
-            value = "This is the string from k8s"
-          }
-          image_pull_policy = "Always"
-        }
-      }
-    }
-  }
-}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-fe-deploy
+  labels:
+    app: catalog-fe
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-fe-pod
+      tier: frontend
+  template:
+    metadata:
+      name: catalog-fe-pod
+      labels:
+        app: catalog-fe-pod
+        tier: frontend
+    spec:
+      containers:
+      - name: catalog-fe
+        image: hoanganhleboy/catalog-fe:latest
+        ports:
+        - containerPort: 80
 
-resource "kubernetes_service" "catalog-fe-service" {
-  metadata {
-    name = "catalog-fe-service"
-    labels = { app = "catalog-fe-service", tier = "frontend" }
-  }
-  spec {
-    selector = { app = "catalog-fe-pod", tier = "frontend"}
-    port {
-      protocol = "TCP"
-      port = 80
-      target_port = 80
-    }
-    type = "NodePort"
-  }
-}
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-fe-service
+  labels:
+    app: catalog-fe-service
+    tier: frontend
+spec:
+  selector:
+    app: catalog-fe-pod
+    tier: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
 \end{lstlisting} 
 \subsubsection*{Catalog microservice}
-\noindent Catalog microservice sau khi được build thành image sẽ được chạy từ file .jar, thông qua JVM.
-\begin{lstlisting}[language=terraform]
-resource "kubernetes_deployment" "catalog-ms-deploy" {
-  metadata {
-    name = "catalog-ms-deploy"
-    labels = { app = "catalog-ms", tier = "backend" }
-  }
-  spec {
-    replicas = 1
-    selector {
-      match_labels = { app = "catalog-ms-pod", tier = "backend" }
-    }
-    template {
-      metadata {
-        name = "catalog-ms-pod"
-        labels = { app = "catalog-ms-pod", tier = "backend"}
-      }
-      spec {
-        container {
-          name = "catalog-ms"
-          image = "hoanganhleboy/catalog-ms"
-          port { container_port = 8090 } // This port the same with port in the code.
-          resources {
-            requests = {
-              cpu = "256m"
-              memory = "128Mi"
-            }
-            limits = {
-              cpu = "256m"
-              memory = "128Mi"
-            }
-          }
-        }
-      }
-    }
-  }
-}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-ms-deploy
+  labels:
+    app: catalog-ms
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: catalog-ms-pod
+      labels:
+        app: catalog-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: catalog-ms
+        image: hoanganhleboy/catalog-ms
+        ports:
+        - containerPort: 8080
+        env:
+          - name: PRODUCT_SERVICE_URL
+            value: http://catalog-db-service:9090
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "128Mi"
 
-resource "kubernetes_service" "catalog-ms-service" {
-  metadata {
-    name = "catalog-ms-service"
-    labels = { app = "catalog-ms-service", tier = "backend" }
-  }
-  spec {
-    selector = { app = "catalog-ms-pod", tier = "backend"}
-    port {
-      protocol = "TCP"
-      port = 8090 // port expose to outside
-      target_port = 80 // This port the same with port in the code.
-    }
-    type = "NodePort"
-  }
-}
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-ms-service
+  labels:
+    app: catalog-ms-service
+    tier: backend
+spec:
+  selector:
+    app: catalog-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  type: LoadBalancer
 \end{lstlisting}
 \subsection{Triển khai Ingress}
 \noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
@@ -423,28 +642,50 @@ metadata:
   name: example-ingress
   annotations:
     nginx.ingress.kubernetes.io/enable-directory-listing: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
     - http:
         paths:
           - pathType: Prefix
-            path: /backend(/|$)(.*)
+            path: /catalog/?(.*)
             backend:
               service:
                 name: catalog-ms-service
                 port:
-                  number: 80
+                  number: 8080
           - pathType: Prefix
-            path: /frontend/?(.*)
-            # path: /
+            path: /authen/?(.*)
+            backend:
+              service:
+                name: authen-ms-service
+                port:
+                  number: 8081
+          - pathType: Prefix
+            path: /order/?(.*)
+            backend:
+              service:
+                name: order-ms-service
+                port:
+                  number: 8082
+          - pathType: Prefix
+            path: /noti/?(.*)
+            backend:
+              service:
+                name: noti-ms-service
+                port:
+                  number: 8083
+          - pathType: Prefix
+            path: /?(.*)
             backend:
               service:
                 name: catalog-fe-service
                 port:
                   number: 80
----
-
 \end{lstlisting}
 \subsection{Triển khai Horizontal Pod Autoscaler}
 \noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. HPA được hiện thực như sau:
