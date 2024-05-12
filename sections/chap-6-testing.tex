@@ -688,7 +688,7 @@ spec:
                   number: 80
 \end{lstlisting}
 \subsection{Triển khai Horizontal Pod Autoscaler}
-\noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. HPA được hiện thực như sau:
+\noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. Ví dụ như với \textbf{Catalog microservice}, HPA được hiện thực như sau:
 \begin{lstlisting}[language=yaml]
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -727,7 +727,22 @@ spec:
           value: 4
 \end{lstlisting}
 \subsection{Triển khai Load balancer}
-\noindent TBD
+\noindent Một số nền tảng Kubernetes cluster không có sẵn load balancer, ví dụ trong trường hợp này là minikube. Tuy nhiên, ta vẫn có thể kích hoạt tính năng load balancer thông qua plugin \lstinline|metallb| bằng câu lệnh \lstinline|minikube addons enable metallb|. Sau đó, ta có thể cấu hình miền IP cho load balancer này như sau:
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: metallb-system
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - 192.168.49.10-192.168.49.20
+\end{lstlisting}
+
 \subsection{Triển khai hệ thống metrics server để ghi lại custom metrics}
 \noindent Để có thể scale một service theo request, ta cần hiện thực các dịch vụ sau vào cluster:
 \begin{itemize}
