@@ -74,3 +74,170 @@ Ngoài ra, để việc đóng góp của các thành viên được diễn ra m
     \label{fig:ecomm_app_source_code}
 \end{figure}
 \section{Giao diện hệ thống}
+\subsection{Trang đăng nhập}
+\noindent Sau khi đăng nhập thành công, hệ thống chuyển đến trang chủ, nếu người dùng chưa đăng ký tài khoản, chọn nút đăng ký, hệ thống sẽ chuyển đến trang đăng ký
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.35]{images/hieu/chap-5/login.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang đăng nhập}
+    \end{center}
+\end{figure}
+
+\subsection{Trang đăng ký tài khoản}
+\noindent Sau khi đăng ký tài khoản thành công, hệ thống chuyển đến trang đăng nhập, nếu đã có tài khoản, chọn nút đăng nhập.
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.35]{images/hieu/chap-5/signup.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang đăng ký}
+    \end{center}
+\end{figure}
+\subsection{Trang chủ - Catalog}
+\noindent Giao diện trang chủ gồm các thành phần:
+\begin{itemize}
+    \item Header: Hiển thị logo, tên cửa hàng, nút đăng nhập, giỏ hàng, nút xem thông báo.
+    \item Sidebar: Hiển thị danh mục các sản phẩm
+    \item Danh sách giảm giá nổi bật
+    \item Danh sách tất cả sản phẩm dưới dạng phân trang, thông tin sản phẩm như tên, số lượng trong kho, giá, đánh giá.
+    \item Thanh tìm kiếm sản phẩm
+    \item Lọc sản phẩm theo khoảng giá
+    \item Footer: Hiển thị thông tin liên hệ, thông tin cửa hàng.
+    \item Modal: Hiển thị thông tin chi tiết sản phẩm khi người dùng click vào sản phẩm.
+\end{itemize}
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.35]{images/hieu/chap-5/catalog-1.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang chủ - Slider giảm giá - Danh mục sản phẩm}
+    \end{center}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.35]{images/hieu/chap-5/catalog-2.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang chủ - Danh sách sản phẩm }
+    \end{center}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.4]{images/hieu/chap-5/search.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang chủ - Tìm kiếm và lọc sản phẩm }
+    \end{center}
+\end{figure}
+\subsection{Trang chi tiết sản phẩm}
+\begin{itemize}
+    \item Hiển thị đầy đủ và chi tiết các thông tin từng sản phẩm của cửa hàng.
+    \item Chọn nút mua ngay để mua trực tiếp sản phẩm.
+    \item Chọn nút thêm vào giỏ hàng để thêm sản phẩm vào giỏ hàng.
+\end{itemize}
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.4]{images/hieu/chap-5/product-detail.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang chi tiết sản phẩm}
+    \end{center}
+\end{figure}
+\subsection{Trang giỏ hàng}
+\begin{itemize}
+    \item Hiển thị danh sách các sản phẩm người dùng có dự định mua.
+    \item Hiển thị số lượng từng sản phẩm, tổng phụ, phí vận chuyển, tổng cuối cùng.
+    \item Người dùng có thể điều chỉnh số lượng cũng như xóa sản phẩm khỏi giỏ hàng.
+    \item Chọn nút thanh toán để tạo đơn hàng các sản phẩm trong giỏ hàng.
+\end{itemize}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.4]{images/hieu/chap-5/cart.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang giỏ hàng}
+    \end{center}
+\end{figure}
+\subsection{Trang đặt hàng - Thanh toán}
+\begin{itemize}
+    \item Hiển thị danh sách các sản phẩm người dùng muốn mua.
+    \item Hiển thị số lượng từng sản phẩm, tổng phụ, phí vận chuyển, tổng cuối cùng.
+    \item Thông tin người dùng, địa chỉ giao hàng.
+    \item Chọn nút thanh toán để hoàn tất tạo đơn hàng.
+\end{itemize}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.4]{images/hieu/chap-5/payment.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang đặt hàng}
+    \end{center}
+\end{figure}
+\subsection{Trang quản lý đơn hàng}
+\begin{itemize}
+    \item Hiển thị danh sách các đơn hàng mà người dùng đã đặt dưới dạng phân trang.
+    \item Thông tin đơn hàng như: mã đơn hàng, ngày đặt hàng, tổng tiền, phương thức thanh toán, trạng thái đơn hàng.
+    \item Nhấn chọn từng đơn hàng để xem chi tiết hơn.
+    \item Lọc đơn hàng theo trạng thái hoặc theo ngày đặt hàng.
+\end{itemize}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.43]{images/hieu/chap-5/ordered.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang quản lý đơn hàng}
+    \end{center}
+\end{figure}
+\subsection{Trang chi tiết đơn hàng}
+\noindent Hiển thị thông tin chi tiết của từng đơn hàng.
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.4]{images/hieu/chap-5/ordered-detail.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang chi tiết đơn hàng}
+    \end{center}
+\end{figure}
+\subsection{Trang quản lý tài khoản}
+\begin{itemize}
+    \item Hiển thị thông tin người dùng như: tên đầy đủ, email, số điện thoại.
+    \item Thay đổi thông tin nếu muốn, nhấn lưu thay đổi để cập nhật lên hệ thống, tương tự với đổi mật khẩu.
+\end{itemize}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.4]{images/hieu/chap-5/account.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang quản lý tài khoản}
+    \end{center}
+\end{figure}
+\subsection{Trang quản lý thông báo}
+\begin{itemize}
+    \item Hiển thị danh sách các thông báo mà hệ thống đã gửi cho người dùng.
+    \item Hiển thị tất cả thông báo.
+    \item Hiển thị riêng các thông báo chưa đọc.
+    \item Thông tin chi tiết thông báo như: nội dung, thời gian.
+    \item Nhấn từng thông báo để xem chi tiết.
+    \item Cập nhật tất cả thông báo thành đã đọc nếu muốn.
+\end{itemize}
+
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.5]{images/hieu/chap-5/noti.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang quản lý tất cả thông báo}
+    \end{center}
+\end{figure}
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.5]{images/hieu/chap-5/noti-notread.png}
+    \vspace*{3mm}
+    \caption{Giao diện trang quản lý thông báo người dùng chưa đọc }
+    \end{center}
+\end{figure}
+\subsection{Giao diện popup thông báo mới}
+\noindent Hiển thị danh sách các thông báo mới
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.35]{images/hieu/chap-5/popup.png}
+    \vspace*{3mm}
+    \caption{Giao diện popup thông báo mới}
+    \end{center}
+\end{figure}
