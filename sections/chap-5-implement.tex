@@ -25,6 +25,59 @@
 %     \item Horizontal Pod Autoscaler: Dùng để tăng hoặc giảm số pod một cách tự động, dựa trên các thông số (metrics) của chính các pod đó.
 % \end{itemize}
 \section{Lựa chọn công nghệ và thư viện}
+\subsection{Frontend}
+\noindent Để hiện thực giao diện người dùng, nhóm đã lựa chọn ReactJS, một thư viện JavaScript phổ biến được phát triển bởi Facebook. ReactJS giúp xây dựng giao diện người dùng một cách dễ dàng, linh hoạt và hiệu quả. Nó sử dụng cơ chế Virtual DOM để tối ưu hóa hiệu suất, giúp người dùng có trải nghiệm tốt hơn.\\[0.5cm]
+
+Cùng với ReactJS, nhóm cũng sử dụng thêm các library/framework/tool để hỗ trợ như:
+\begin{itemize}
+    \item \textbf{React Router}: Là một thư viện mã nguồn mở để quản lý điều hướng (routing) trong các ứng dụng
+    web. Thay vì tải lại toàn bộ trang web khi người dùng thực hiện các thao tác điều hướng, React
+    Router cho phép ứng dụng thay đổi nội dung trên cùng một trang một cách nhanh chóng và mượt
+    mà, giúp tăng trải nghiệm người dùng.
+    \item \textbf{Redux}: Redux là một thư viện quản lý trạng thái (state management) cho ứng dụng JavaScript, thường được sử dụng trong các ứng dụng React. Nó giúp quản lý trạng thái của ứng dụng một cách hiệu quả và dễ dàng theo dõi.
+    \item \textbf{Reduc Toolkit}: Redux Toolkit là một bộ công cụ (toolkit) được thiết kế để giảm bớt sự phức tạp khi sử dụng Redux và cung cấp các tiện ích hữu ích để viết code một cách nhanh chóng và hiệu quả hơn. 
+    \item \textbf{React Persist}: Redux Persist là một thư viện cho phép lưu trữ trạng thái của ứng dụng Redux vào bộ nhớ cục bộ của trình duyệt, giúp duy trì trạng thái khi người dùng tải lại trang hoặc đóng/mở trình duyệt.
+    \item \textbf{Material-UI}: Thư viện UI component dựa trên Material Design của Google, giúp xây dựng giao diện người dùng nhanh chóng và dễ dàng.
+    \item \textbf{Axios}: Là một thư viện HTTP client dựa trên Promise dùng để thực hiện các yêu cầu HTTP từ trình duyệt và Node.js. Axios giúp đơn giản hóa việc giao tiếp với server, hỗ trợ các phương thức HTTP như GET, POST, PUT, DELETE và xử lý dữ liệu trả về dễ dàng.
+    \item \textbf{Thư viện Antd}: Là một thư viện UI component dành cho React, cung cấp một loạt các thành phần giao diện người dùng phong phú và đa dạng theo phong cách Ant Design. Thư viện này giúp tăng tốc quá trình phát triển giao diện người dùng với thiết kế nhất quán và đẹp mắt.
+    \item \textbf{Styled-components}: Là một thư viện cho phép viết CSS trực tiếp trong JavaScript bằng cách sử dụng tagged template literals. Styled-components giúp tạo các component với styles riêng biệt, dễ duy trì và tái sử dụng, đồng thời hỗ trợ tính năng theming và tạo CSS động.
+    \item \textbf{SASS}: Là một tiền xử lý CSS giúp viết mã CSS dễ dàng hơn và mạnh mẽ hơn bằng cách cung cấp các tính năng như biến, lồng ghép (nesting), mixin, và thừa kế (inheritance). SASS giúp viết mã CSS có cấu trúc rõ ràng và dễ duy trì hơn.
+    \item \textbf{Vite}: Là một công cụ build và phát triển nhanh chóng dành cho các dự án web hiện đại, đặc biệt là các ứng dụng sử dụng JavaScript và TypeScript. Vite cung cấp khả năng hot module replacement (HMR), giúp phát triển nhanh hơn và tối ưu hóa thời gian build sản phẩm cuối cùng.
+    \item \textbf{Nginx}:Là một máy chủ web (web server) mạnh mẽ, thường được sử dụng làm reverse proxy, load balancer, mail proxy, và HTTP cache. Nginx nổi tiếng với hiệu suất cao, khả năng xử lý lượng truy cập lớn, và dễ cấu hình.
+    \item \textbf{Formik}: Là một thư viện quản lý form cho React, giúp quản lý trạng thái của form, xác thực dữ liệu, và xử lý sự kiện một cách dễ dàng và hiệu quả.
+    \item \textbf{Yup}: Là một thư viện xác thực dữ liệu (data validation) cho JavaScript và TypeScript, giúp xác thực dữ liệu đầu vào từ người dùng một cách dễ dàng và linh hoạt.
+\end{itemize}
+\noindent Ngoài ra, ReactJS còn hỗ trợ một loạt các packages khác như react-query, react-hook-form, react-toastify, react-icons, react-select, react-table, react-datepicker, react-dropzone, react-quill, react-router-dom, react-slick, react-spring, react-transition-group, react-use, react-window, react-virtualized, react-youtube, v.v. giúp tăng cường khả năng phát triển và tối ưu hóa hiệu suất của ứng dụng.
+\subsection{Backend}
+\subsubsection{Java Spring Boot}
+\noindent Để hiện thực các microservice, nhóm đã lựa chọn Java Spring Boot, một framework phổ biến được sử dụng để xây dựng các ứng dụng Java nhanh chóng và hiệu quả. Spring Boot giúp giảm thiểu thời gian và công sức cần thiết để xây dựng ứng dụng Java, đồng thời cung cấp các tính năng như dependency injection, auto-configuration, và embedded server, giúp tăng tốc quá trình phát triển và triển khai ứng dụng.
+
+\subsubsection{Golang Fiber}
+\noindent Golang (Go) là một ngôn ngữ lập trình mã nguồn mở được phát triển bởi Google, được thiết kế để đơn giản, hiệu quả và dễ sử dụng. Nó có cú pháp rõ ràng, hiệu suất cao, hỗ trợ quản lý đồng thời và garbage collection tự động. Go hỗ trợ đa nền tảng và có một hệ sinh thái phong phú với thư viện tiêu chuẩn và cộng đồng phát triển mạnh mẽ.\\[0.5cm]
+
+\noindent Fiber là một framework web được viết bằng ngôn ngữ lập trình Go (Golang), lấy cảm hứng từ Express.js của Node.js, với mục tiêu cung cấp một framework nhẹ, nhanh và thân thiện với lập trình viên.
+\subsubsection{NodeJS kết hợp ExpressJS} 
+\noindent Node.js là một nền tảng phát triển ứng dụng web mã nguồn mở, được xây dựng trên JavaScript Engine của Chrome (V8 Engine). Node.js cho phép viết mã JavaScript ở phía server, giúp xây dựng các ứng dụng web hiệu quả và mạnh mẽ. \\[0.5cm]
+\noindent Express là một framework web cho Node.js, giúp xây dựng các ứng dụng web và API một cách nhanh chóng và dễ dàng.
+\subsubsection{SocketIO}
+\noindent Socket.IO là một thư viện JavaScript cho phép thiết lập kết nối real-time giữa client và server thông qua WebSockets hoặc các kỹ thuật khác như polling hay long-polling. Socket.IO giúp xây dựng các ứng dụng real-time như chat, game, hoặc các ứng dụng cần cập nhật dữ liệu một cách nhanh chóng và liên tục.
+
+\subsection{Database}
+\noindent Để lưu trữ dữ liệu, nhóm đã sử dụng PostgreSQL, một hệ quản trị cơ sở dữ liệu mã nguồn mở phổ biến, mạnh mẽ và linh hoạt. PostgreSQL hỗ trợ nhiều tính năng như ACID, MVCC, JSON, và hỗ trợ các kiểu dữ liệu phong phú, giúp lưu trữ và truy vấn dữ liệu một cách hiệu quả.
+
+\subsection{Message Broker}
+\noindent RabbitMQ là một hệ thống message broker mã nguồn mở, được sử dụng để truyền thông tin giữa các ứng dụng khác nhau. RabbitMQ hỗ trợ nhiều giao thức như AMQP, MQTT, STOMP, và HTTP, giúp kết nối các ứng dụng với nhau một cách linh hoạt và hiệu quả.
+
+\subsection{Deployment}
+\noindent Để triển khai hệ thống, nhóm đã sử dụng Kubernetes, một hệ thống mã nguồn mở giúp quản lý và triển khai các containerized applications. Kubernetes cung cấp các tính năng như auto-scaling, self-healing, và load balancing, giúp tăng cường hiệu suất và tin cậy của hệ thống.
+\subsubsection{Docker}
+\noindent Docker là một nền tảng mã nguồn mở giúp xây dựng, vận chuyển và chạy các ứng dụng trong các container. Docker giúp tạo ra môi trường đồng nhất giữa các môi trường phát triển, thử nghiệm và triển khai, giúp tăng tốc quá trình phát triển và triển khai ứng dụng.
+\subsubsection{Kubernetes}
+Kubernetes là một hệ thống mã nguồn mở để tự động hóa việc triển khai, mở rộng và quản lý các ứng dụng container. Nó giúp điều phối các container trên một cụm (cluster) máy chủ, đảm bảo khả năng mở rộng, tự phục hồi và dễ dàng quản lý. Kubernetes cung cấp các tính năng như cân bằng tải, tự động phát hiện dịch vụ, quản lý cấu hình và bí mật, và tự động mở rộng ứng dụng dựa trên tải công việc.
+\subsubsection{Minikube}
+Minikube là một công cụ giúp chạy Kubernetes cục bộ trên máy tính cá nhân. 
+Nó tạo ra một cụm Kubernetes một nút (single-node cluster) để phát triển và thử nghiệm, cho phép bạn trải nghiệm và học tập Kubernetes mà không cần hạ tầng phức tạp. 
+Minikube hỗ trợ nhiều nền tảng như Linux, macOS và Windows, và cung cấp đầy đủ các tính năng của Kubernetes trong một môi trường dễ cài đặt và sử dụng.
 \section{Mã nguồn}
 \subsection{Quản lý mã nguồn}
 \noindent Git là một hệ thống quản lý phiên bản mã nguồn mở rất phổ biến, được sử dụng để quản lý mã nguồn trong các dự án phần mềm. Nó được Linus Torvalds phát triển vào năm 2005 và đã trở thành một công cụ không thể thiếu trong cộng đồng phần mềm mã nguồn mở. Git giúp các nhà phát triển dễ dàng và hiệu quả làm việc trên các phiên bản khác nhau của cùng một dự án, từ đó hỗ trợ quản lý và giám sát quá trình phát triển phần mềm. \\[0.5cm]
