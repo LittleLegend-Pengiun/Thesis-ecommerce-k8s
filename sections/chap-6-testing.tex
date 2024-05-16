@@ -633,6 +633,304 @@ spec:
     nodePort: 30080
   type: LoadBalancer
 \end{lstlisting}
+\subsection{Triển khai các database dưới dạng statefulset}
+\subsubsection*{Catalog database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: catalog-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: catalog-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-dbms
+  template:
+    metadata:
+      labels:
+        app: catalog-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: catalog
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: duyphatbk
+        volumeMounts:
+        - name: catalog-dbms-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+  volumeClaimTemplates:
+  - metadata:
+      name: catalog-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-dbms-service
+spec:
+  selector:
+    app: catalog-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Authentication database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: authen-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: authen-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authen-dbms
+  template:
+    metadata:
+      labels:
+        app: authen-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: authen
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        volumeMounts:
+        - name: authen-dbms-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+  volumeClaimTemplates:
+  - metadata:
+      name: authen-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-dbms-service
+spec:
+  selector:
+    app: authen-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Order database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: order-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: order-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-dbms
+  template:
+    metadata:
+      labels:
+        app: order-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: order
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: duyphatbk
+        volumeMounts:
+        - name: order-dbms-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"  
+  volumeClaimTemplates:
+  - metadata:
+      name: order-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-dbms-service
+spec:
+  selector:
+    app: order-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Notification database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: noti-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: noti-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noti-dbms
+  template:
+    metadata:
+      labels:
+        app: noti-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: noti
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        volumeMounts:
+        - name: noti-dbms-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: noti-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noti-dbms-service
+spec:
+  selector:
+    app: noti-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
 \subsection{Triển khai Ingress}
 \noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
 \begin{lstlisting}[language=yaml]
@@ -1064,26 +1362,7 @@ spec:
 Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
 Sau đó, ta sẽ chạy cặp lệnh \lstinline|terraform init| để terraform tải và thiết lập sẵn các dependency cần thiết, và \lstinline|terraform apply --auto-approve| để khởi tạo các dịch vụ Kubernetes được viết bằng terraform.\\[0.5cm]
 Với các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
-\subsection{Kiểm tra tính sẵn sàng - availability}
-\subsubsection{Kiểm tra tính sẵn sàng của pod được triển khai bởi Deployment}
-\noindent Để kiểm tra tính sẵn sàng của hệ thống, ta sẽ thử xóa pod đi xem chuyện gì sẽ xảy ra.\\[0.5cm]
-Đây là trạng thái ban đầu của các pod:
-\begin{figure}[H]
-  \begin{center}
-  \includegraphics[scale=0.45]{images/hanh/pod_before_delete.png}
-  \caption{Hình ảnh trước khi xóa pod}
-  \end{center}
-\end{figure}
-Còn đây là hình ảnh sau khi vừa xóa:
-\begin{figure}[H]
-  \begin{center}
-  \includegraphics[scale=0.45]{images/hanh/pod_after_delete.png}
-  \caption{Hình ảnh sau khi vừa xóa pod}
-  \end{center}
-\end{figure}
-Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
-\subsubsection{Kiểm tra tính sẵn sàng với pod được triển khai bằng Statefulset}
-\noindent TBD
+
 \subsection{Kiểm tra tính mở rộng - scalability}
 \subsubsection{Manual scaling}
 \noindent Tính mở rộng là việc hệ thống có thể tạo ra thêm nhiều bản sao của microservice, chạy song song với nhau nhằm đáp ứng được lượng request trên giây tương ứng của người dùng. Với Kubernetes, ta có thể dễ dàng scale up hay scale down hệ thống bằng tay thông qua việc điều chỉnh miền \lstinline|replicas| trong file config của Deployment.\\[0.5cm]
@@ -1134,6 +1413,78 @@ Sau khi bài kiểm tra kết thúc, ta thu thập được kết quả thông q
 \end{figure}
 Thông qua hình trên, ta dễ thấy được là ScaledObject đã làm tốt công việc của mình, khi có thể tự động scale lên số pod từ 1 lên 10 khi lượng request tăng, và khi lượng request giảm được một thời gian, thì đã scale xuống lại về 1.
 
+\subsection{Kiểm tra tính sẵn sàng - availability}
+\subsubsection{Kiểm tra tính sẵn sàng của pod được triển khai bởi Deployment}
+\noindent Để kiểm tra tính sẵn sàng của hệ thống, ta sẽ thử xóa pod đi xem chuyện gì sẽ xảy ra.\\[0.5cm]
+Đây là trạng thái ban đầu của các pod:
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[scale=0.45]{images/hanh/pod_before_delete.png}
+  \caption{Hình ảnh trước khi xóa pod}
+  \end{center}
+\end{figure}
+Còn đây là hình ảnh sau khi vừa xóa:
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[scale=0.45]{images/hanh/pod_after_delete.png}
+  \caption{Hình ảnh sau khi vừa xóa pod}
+  \end{center}
+\end{figure}
+Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
+\subsubsection{Kiểm tra tính sẵn sàng với pod được triển khai bằng Statefulset}
+\noindent Khi triển khai database, việc đảm bảo dữ liệu vẫn còn tồn tại sau khi trải qua sự cố là điều tối quan trọng. Do đó, ta sẽ triển khai các database qua các pod được quản lý bởi Statefulset.\\[0.5cm]
+Ta kiểm tra thử khả năng khôi phục lại dữ liệu của Statefulset pod bằng cách thử xóa pod \lstinline|catalog-dbms-statefulset-0|, khiến một pod mới phải được tạo như hình \ref{fig:catalog-sts-test}.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.4]{images/hanh/catalog-sts-restart}
+  \end{center}
+  \caption{StatefulSet pod được khởi động lại}
+  \label{fig:catalog-sts-test}
+
+\end{figure}
+
+\noindent Sau đó, ta kiểm tra lại trang chủ xem có bị mất hết dữ liệu không, và kết quả là danh sách mặt hàng vẫn còn nguyên.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.4]{images/hanh/catalog-sts-result}
+  \end{center}
+  \caption{Dữ liệu mặt hàng vẫn còn nguyên}
+  \label{}
+
+\end{figure}
+
+\subsubsection{Kiểm tra tính sẵn sàng của hệ thống khi có tải cao}
+\noindent Để mô phỏng tình huống, ta sử dụng k6 để giả lập tình huồng khi hệ thống nhận lượng request tăng cao. Với 1 pod bình thường của microservice \lstinline|catalog-ms|, ta thu được kết quả như hình \ref{fig:catalog-stress-test-no-hpa}.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.15]{images/hanh/component-catalog-no-hpa}
+  \end{center}
+  \caption{Kết quả kiểm tra khi không có HPA}
+  \label{fig:catalog-stress-test-no-hpa}
+
+\end{figure}
+
+Khi sử dụng service LoadBalancer kèm với Horizontal Pod Autoscaler, ta có được một giải pháp giúp hệ thống có thể tự động mở rộng, tăng khả năng đáp ứng dịch vụ, từ đó tăng tính sẵn sàng.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.63]{images/hanh/component-catalog-hpa-cpu}
+  \end{center}
+  \caption{Kết quả kiểm tra khi sử dụng Kubernetes HPA}
+  \label{fig:component-hpa}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.15]{images/hanh/component-catalog-hpa-keda}
+  \end{center}
+  \caption{Kết quả kiểm tra khi sử dụng Keda ScaledObject}
+  \label{fig:component-keda}
+
+\end{figure}
+
+\noindent Thông qua các hình ảnh trên, cùng với thông tin triển khai được cung cấp trước đó, ta có thể kết luận được rằng, hệ thống sẽ được gia tăng tính sẵn sàng, khi ta có thể mở rộng và phân phối tải hợp lý vào các pod. Sự chênh lệch giữa hiệu năng của HPA truyền thống (hình \ref{fig:component-hpa}), và việc sử dụng Keda ScaledObject (hình \ref{fig:component-keda}) là không đáng kể khi 2 giải pháp này chưa được tối ưu về hiệu năng.
 
 \section{Kiểm thử hệ thống}
 \subsection{Kiểm thử API}
@@ -1304,6 +1655,4 @@ thực hiện kiểm tra các chức năng cụ thể sau đây:
 
 \subsection{Kiểm thử tính sẵn sàng - availability}
 
-\section{Đánh giá hệ thống}
-\subsection{Đánh giá tính hiệu quả của khả năng scalability}
-\subsection{Đánh giá tính hiệu quả của khả năng availability}
+\section{Đánh giá}
