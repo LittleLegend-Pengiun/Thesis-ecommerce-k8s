@@ -586,7 +586,7 @@ metadata:
     app: catalog-ms
     tier: backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: catalog-ms-pod
@@ -631,6 +631,411 @@ spec:
     port: 8080
     targetPort: 8080
     nodePort: 30080
+  type: LoadBalancer
+\end{lstlisting}
+\subsubsection*{Catalog database serive}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-db-deploy
+  labels:
+    app: catalog-db
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog-db-pod
+      tier: database
+  template:
+    metadata:
+      name: catalog-db-pod
+      labels:
+        app: catalog-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: catalog-db
+        image: hoanganhleboy/catalog-db
+        ports:
+        - containerPort: 9090
+        env:
+          - name: SPRING_DATASOURCE_URL
+            value: jdbc:postgresql://catalog-dbms-service:5432/catalog
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-db-service
+  labels:
+    app: catalog-db-service
+    tier: database
+spec:
+  selector:
+    app: catalog-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9090
+    targetPort: 9090
+  type: LoadBalancer
+
+\end{lstlisting}
+
+\subsubsection*{Authentication microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authen-ms-deploy
+  labels:
+    app: authen-ms
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authen-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: authen-ms-pod
+      labels:
+        app: authen-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: authen-ms
+        image: hoanganhleboy/authen-ms:latest
+        ports:
+        - containerPort: 8081
+        env:
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+          - name: DB_URL
+            value: http://authen-db-service:9091
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "128Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-ms-service
+  labels:
+    app: authen-ms-service
+    tier: backend
+spec:
+  selector:
+    app: authen-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 8081
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Authentication database service}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authen-db-deploy
+  labels:
+    app: authen-db
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authen-db-pod
+      tier: database
+  template:
+    metadata:
+      name: authen-db-pod
+      labels:
+        app: authen-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: authen-db
+        image: hoanganhleboy/authen-db
+        ports:
+        - containerPort: 9091
+        env:
+          - name: DB
+            value: "host=authen-dbms-service user=postgres password=postgres dbname=authen port=5432"
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "128Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-db-service
+  labels:
+    app: authen-db-service
+    tier: database
+spec:
+  selector:
+    app: authen-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9091
+    targetPort: 9091
+  type: LoadBalancer
+
+\end{lstlisting}
+
+\subsubsection*{Order microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-ms-deploy
+  labels:
+    app: order-ms
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: order-ms-pod
+      labels:
+        app: order-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: order-ms
+        image: hoanganhleboy/order-ms
+        ports:
+        - containerPort: 8082
+        env:
+          - name: ORDER_SERVICE_URL
+            value: http://order-db-service:9092
+          - name: SPRING_RABBITMQ_HOST
+            value: rabbitmq
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-ms-service
+  labels:
+    app: order-ms-service
+    tier: backend
+spec:
+  selector:
+    app: order-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8082
+    targetPort: 8082
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Order database service}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-db-deploy
+  labels:
+    app: order-db
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-db-pod
+      tier: database
+  template:
+    metadata:
+      name: order-db-pod
+      labels:
+        app: order-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: order-db
+        image: hoanganhleboy/order-db
+        ports:
+        - containerPort: 9092
+        env:
+          - name: SPRING_DATASOURCE_URL
+            value: jdbc:postgresql://order-dbms-service:5432/order
+          - name: SPRING_RABBITMQ_HOST
+            value: rabbitmq
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+  
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-db-service
+  labels:
+    app: order-db-service
+    tier: database
+spec:
+  selector:
+    app: order-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9092
+    targetPort: 9092
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Notification microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noti-ms-deploy
+  labels:
+    app: noti-ms
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noti-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: noti-ms-pod
+      labels:
+        app: noti-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: noti-ms
+        image: hoanganhleboy/noti-ms:latest
+        ports:
+        - containerPort: 8083
+        env:
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+          - name: NOTI_DB
+            value: http://noti-db-service:9083
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noti-ms-service
+  labels:
+    app: noti-ms-service
+    tier: backend
+spec:
+  selector:
+    app: noti-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8083
+    targetPort: 8083
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Notification database service}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noti-db-deploy
+  labels:
+    app: noti-db
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noti-db-pod
+      tier: database
+  template:
+    metadata:
+      name: noti-db-pod
+      labels:
+        app: noti-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: noti-db
+        image: hoanganhleboy/noti-db
+        ports:
+        - containerPort: 9083
+        env:
+          - name: DB
+            value: "host=noti-dbms-service user=postgres password=postgres dbname=noti port=5432"
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noti-db-service
+  labels:
+    app: noti-db-service
+    tier: database
+spec:
+  selector:
+    app: noti-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9083
+    targetPort: 9083
   type: LoadBalancer
 \end{lstlisting}
 \subsection{Triển khai các database dưới dạng statefulset}
@@ -1360,8 +1765,8 @@ spec:
   \item \lstinline|minikube addons enable metrics-server|
 \end{itemize}
 Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
-Sau đó, ta sẽ chạy cặp lệnh \lstinline|terraform init| để terraform tải và thiết lập sẵn các dependency cần thiết, và \lstinline|terraform apply --auto-approve| để khởi tạo các dịch vụ Kubernetes được viết bằng terraform.\\[0.5cm]
-Với các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
+
+Vì các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
 
 \subsection{Kiểm tra tính mở rộng - scalability}
 \subsubsection{Manual scaling}
