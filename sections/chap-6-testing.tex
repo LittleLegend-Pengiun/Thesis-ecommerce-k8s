@@ -2216,11 +2216,40 @@ Sau đó, ta thực hiện lại thí nghiệm lần nữa, cách lần thử ng
 \end{figure}
 
 \subsubsection{Nhận xét}
-\noindent Tổng hợp lại kết quả thử nghiệm, ta được bảng 
+\noindent Tổng hợp lại kết quả thử nghiệm, ta được bảng \ref{tab:stress-test-result}.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|c|c|c|c|}
+  \hline
+  \textbf{Luồng dịch vụ} & \multicolumn{1}{c|}{\textbf{Kịch bản 1}} & \multicolumn{1}{c|}{\textbf{Kịch bản 2}} & \multicolumn{1}{c|}{\textbf{Kịch bản 3}}\\ \hline
+  Catalog & 1831 requests & 5201 requests & 9323 requests \\ \hline
+  Authentication & 7861 request & 15101 requets & 61490 requets \\ \hline
+  Order & 10070 requests & \parbox[t]{3.4cm}{10007 requests (lần 1) \\ 59052 requests (lần 2)} & 88997 requests \\ \hline
+  \end{tabular}%
+  % }
+  \caption{Tổng hợp lượng request được phục vụ ở các luồng qua các kịch bản}
+  \label{tab:stress-test-result}
+\end{table}
+
+Thông qua bảng \ref{tab:stress-test-result}, ta nhận thấy rằng khi số lượng pod phục vụ cho request tăng (số pod của luồng dịch vụ tăng dần qua các kịch bản), thì số lượng request mà luồng dịch vụ có thể phục vụ cũng tăng lên, chứng tỏ sự hiệu quả của giải pháp.
 
 \subsection{Kiểm thử tính sẵn sàng - availability, khi có dịch vụ bị sập}
 \subsubsection{Thiết lập}
 \noindent Ở bài kiểm tra này, ta sẽ kiểm tra tính sẵn sàng, thông suốt của các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order|, khi có yêu cầu lấy dữ liệu từ database, với tình huống một số pod của luồng dịch vụ không sẵn sàng.\\[0.5cm]
 Ta cũng sẽ sử dụng API \lstinline|/test| để kiểm tra sự thông suốt của luồng dịch vụ, khi có một pod bị khởi động lại.
+
+\subsubsection{Kiểm tra}
+\noindent Với cấu hình hiện tại, cluster có số lượng deployment như hình \ref{fig:deployments-final}.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.5]{images/hanh/deployments-final}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Trạng thái deployment của các microservice lúc không tải}
+  \label{fig:deployments-final}
+
+\end{figure}
+
 
 \section{Đánh giá}
