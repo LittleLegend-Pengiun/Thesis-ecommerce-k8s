@@ -2060,6 +2060,167 @@ thực hiện kiểm tra các chức năng cụ thể sau đây:
 
 \subsection{Kiểm thử tính mở rộng - scalability}
 
-\subsection{Kiểm thử tính sẵn sàng - availability}
+\subsubsection{Thiết lập}
+\noindent Để phục vụ cho các thí nghiệm, các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order| đều được tạo thêm một luồng API dùng riêng cho việc này, gọi là \lstinline|/test|.\\[0.5cm]
+Sử dụng k6, ta đặt luồng dịch vụ dưới lượng tải cao để xem xét khả năng tự động mở rộng (auto scaling) của các microservice bên trong đã được trển khai với autoscaling.
+
+\subsubsection{Kết quả}
+\noindent Số pod có thể tự động scale trong bài kiểm tra, xày ra ở cả microservice và database microservice.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-catalog-with-hpa-show-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Số lượng pod của luồng dịch vụ Catalog}
+  \label{}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-with-hpa-show-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Số lượng pod của luồng dịch vụ Authentication}
+  \label{}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-order-with-hpa-show-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Số lượng pod của luồng dịch vụ Order}
+  \label{}
+
+\end{figure}
+
+\subsection{Kiểm thử tính sẵn sàng - availability, khi có tải cao}
+\subsubsection{Thiết lập}
+
+\noindent Ta sử dụng API \lstinline|/test| để dùng cho các bài kiểm tra có gọi API tới dịch vụ, tương tự như ỏ phần kiểm thử tính mở rộng ở trên. \\[0.5cm]
+Ở bài kiểm tra lần này, ta sẽ sử dụng k6 để tạo lượng tải cao cho API \lstinline|/test| ở các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order|, sau đó sẽ so sánh sự khác biệt giữa số lượng request phục vụ thành công (\lstinline|200 OK|) giữa các kịch bản:
+\begin{itemize}
+  \item \textbf{Kịch bản 1:} Các microservice trong luồng chỉ có 1 pod, không có khả năng auto scaling.
+  \item \textbf{Kịch bản 2:} Các microservice trong luồng có autoscaling.
+  \item \textbf{Kịch bản 3:} Các microservice trong luồng có autoscaling, và database có số instance bằng số pod tối đa mà các microservice có thể scale up được.
+\end{itemize}
+
+\subsubsection{Kết quả thử nghiệm với luồng Catalog}
+\noindent Ta thu được kêt quả như các hình bên dưới.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-catalog-no-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Catalog ở kịch bản 1}
+  \label{fig:fullflow-catalog-no-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-catalog-with-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Catalog ở kịch bản 2}
+  \label{fig:fullflow-catalog-with-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.25]{images/hanh/fullflow-test/full-flow-catalog-10-db-with-lb}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Catalog ở kịch bản 3}
+  \label{fig:fullflow-catalog-with-hpa-10-db}
+
+\end{figure}
+
+\subsubsection{Kết quả thử nghiệm với luồng Authentication}
+\noindent Ta thu được kêt quả như các hình bên dưới.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-no-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Authentication ở kịch bản 1}
+  \label{fig:fullflow-authen-no-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-with-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Authentication ở kịch bản 2}
+  \label{fig:fullflow-authen-with-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-10-db-with-lb}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Authentication ở kịch bản 3}
+  \label{fig:fullflow-authen-with-hpa-10-db}
+
+\end{figure}
+
+\subsubsection{Kết quả thử nghiệm với luồng Order}
+\noindent Ta thu được kêt quả như các hình bên dưới.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-no-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 1}
+  \label{fig:fullflow-order-no-hpa}
+
+\end{figure}
+
+\noindent Khi tiến hành thí nghiệm ở luồng \lstinline|order|, ta chứng kiến được hiện tượng mà khi thí nghiệm với 2 luồng \lstinline|catalog| và \lstinline|authen| không được chứng kiến.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-hpa-fst-time}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 2, lần chạy đầu tiên}
+  \label{fig:fullflow-order-with-hpa-fst-time}
+
+\end{figure}
+
+Sau đó, ta thực hiện lại thí nghiệm lần nữa, cách lần thử nghiệm đầu tiên khoảng 3 phút. 
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-hpa-snd-time}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 2, lần chạy thứ hai}
+  \label{fig:fullflow-order-with-hpa-snd-time}
+
+\end{figure}
+
+\noindent Thí nghiệm cho kịch bản 3 cũng diễn ra cách thí nghiệm cho kịch bản 2 không lâu, khoảng 3 phút.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-hpa-8-db}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 3}
+  \label{fig:fullflow-order-with-hpa-8-db}
+
+\end{figure}
+
+\subsubsection{Nhận xét}
+\noindent Tổng hợp lại kết quả thử nghiệm, ta được bảng 
+
+\subsection{Kiểm thử tính sẵn sàng - availability, khi có dịch vụ bị sập}
+\subsubsection{Thiết lập}
+\noindent Ở bài kiểm tra này, ta sẽ kiểm tra tính sẵn sàng, thông suốt của các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order|, khi có yêu cầu lấy dữ liệu từ database, với tình huống một số pod của luồng dịch vụ không sẵn sàng.\\[0.5cm]
+Ta cũng sẽ sử dụng API \lstinline|/test| để kiểm tra sự thông suốt của luồng dịch vụ, khi có một pod bị khởi động lại.
 
 \section{Đánh giá}
