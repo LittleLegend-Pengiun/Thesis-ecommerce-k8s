@@ -27,7 +27,6 @@
 \section{Lựa chọn công nghệ và thư viện}
 \subsection{Frontend}
 \noindent Để hiện thực giao diện người dùng, nhóm đã lựa chọn ReactJS, một thư viện JavaScript phổ biến được phát triển bởi Facebook. ReactJS giúp xây dựng giao diện người dùng một cách dễ dàng, linh hoạt và hiệu quả. Nó sử dụng cơ chế Virtual DOM để tối ưu hóa hiệu suất, giúp người dùng có trải nghiệm tốt hơn.\\[0.5cm]
-
 Cùng với ReactJS, nhóm cũng sử dụng thêm các library/framework/tool để hỗ trợ như:
 \begin{itemize}
     \item \textbf{React Router}: Là một thư viện mã nguồn mở để quản lý điều hướng (routing) trong các ứng dụng
@@ -68,7 +67,7 @@ Cùng với ReactJS, nhóm cũng sử dụng thêm các library/framework/tool �
 \subsection{Message Broker}
 \noindent RabbitMQ là một hệ thống message broker mã nguồn mở, được sử dụng để truyền thông tin giữa các ứng dụng khác nhau. RabbitMQ hỗ trợ nhiều giao thức như AMQP, MQTT, STOMP, và HTTP, giúp kết nối các ứng dụng với nhau một cách linh hoạt và hiệu quả.
 
-\subsection{Deployment}
+\subsection{Triển khai}
 \noindent Để triển khai hệ thống, nhóm đã sử dụng Kubernetes, một hệ thống mã nguồn mở giúp quản lý và triển khai các containerized applications. Kubernetes cung cấp các tính năng như auto-scaling, self-healing, và load balancing, giúp tăng cường hiệu suất và tin cậy của hệ thống.
 \subsubsection{Docker}
 \noindent Docker là một nền tảng mã nguồn mở giúp xây dựng, vận chuyển và chạy các ứng dụng trong các container. Docker giúp tạo ra môi trường đồng nhất giữa các môi trường phát triển, thử nghiệm và triển khai, giúp tăng tốc quá trình phát triển và triển khai ứng dụng.
@@ -78,6 +77,16 @@ Kubernetes là một hệ thống mã nguồn mở để tự động hóa việ
 Minikube là một công cụ giúp chạy Kubernetes cục bộ trên máy tính cá nhân. 
 Nó tạo ra một cụm Kubernetes một nút (single-node cluster) để phát triển và thử nghiệm, cho phép bạn trải nghiệm và học tập Kubernetes mà không cần hạ tầng phức tạp. 
 Minikube hỗ trợ nhiều nền tảng như Linux, macOS và Windows, và cung cấp đầy đủ các tính năng của Kubernetes trong một môi trường dễ cài đặt và sử dụng.
+\subsubsection{Keda}
+Keda (Kubernetes-based Event-Driven Autoscaling) là một công cụ mã nguồn mở giúp tự động mở rộng các ứng dụng dựa trên sự kiện trong Kubernetes. 
+Keda giúp mở rộng các ứng dụng dựa trên các nguồn sự kiện như hàng đợi, chủ đề, hoặc bất kỳ nguồn sự kiện nào khác, 
+giúp tối ưu hóa việc sử dụng tài nguyên và giảm chi phí vận hành.
+\subsubsection{Prometheus}
+Prometheus là một hệ thống giám sát mã nguồn mở được sử dụng để giám sát và cảnh báo cho các ứng dụng và 
+hệ thống phân tán. Nó sử dụng kiến trúc server-client đơn giản, ngôn ngữ truy vấn PromQL để phân tích dữ liệu, 
+và hỗ trợ giám sát đa chiều với khả năng áp dụng nhãn cho metrics. Prometheus cũng cung cấp tính năng cảnh báo tích hợp và có khả năng mở rộng linh hoạt.
+\subsection{Kiểm thử}
+K6 là một công cụ mã nguồn mở mạnh mẽ được sử dụng để kiểm thử hiệu suất và tải của ứng dụng. Với khả năng tạo và thực thi các kịch bản kiểm thử linh hoạt, K6 cho phép bạn mô phỏng hàng trăm hoặc thậm chí hàng ngàn người dùng truy cập cùng một lúc vào ứng dụng của bạn để đo lường thời gian phản hồi, tải trọng máy chủ và các chỉ số hiệu suất khác.
 \section{Mã nguồn}
 \subsection{Quản lý mã nguồn}
 \noindent Git là một hệ thống quản lý phiên bản mã nguồn mở rất phổ biến, được sử dụng để quản lý mã nguồn trong các dự án phần mềm. Nó được Linus Torvalds phát triển vào năm 2005 và đã trở thành một công cụ không thể thiếu trong cộng đồng phần mềm mã nguồn mở. Git giúp các nhà phát triển dễ dàng và hiệu quả làm việc trên các phiên bản khác nhau của cùng một dự án, từ đó hỗ trợ quản lý và giám sát quá trình phát triển phần mềm. \\[0.5cm]
