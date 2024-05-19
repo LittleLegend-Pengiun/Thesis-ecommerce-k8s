@@ -1,5 +1,14 @@
 \chapter{Triển khai, kiểm thử, và đánh giá hệ thống}
 \section{Triển khai hệ thống}
+\subsection{Mô hình kiến trúc khi triển khai}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.36]{images/hanh/DATN_architecture}
+  \end{center}
+  \caption{Mô hình kiến trúc hệ thống khi triển khai}
+  \label{fig:architecture-deploy}
+
+\end{figure}
 \subsection{Đóng gói các microservice thành các image}
 \noindent Sau khi có một ứng dụng hoàn chỉnh, ta đóng gói nó thành Docker image và đẩy lên Docker Hub. Cách mỗi đóng gói mỗi mircroservice sẽ được trình bày bên dưới.
 
