@@ -2251,5 +2251,69 @@ Ta cũng sẽ sử dụng API \lstinline|/test| để kiểm tra sự thông su�
 
 \end{figure}
 
+Khi mỗi deploymennt có từ 2 pod trở lên, trừ khi toàn bộ pod trong cùng một deploymennt cùng bị chết, nếu không thì luồng dịch vụ vẫn phục vụ bình thường.\\[0.5cm]
+Hình \ref{fig:catalog-test-api-pod-creating} và \ref{fig:catalog-test-api-show} thể hiện việc kiểm tra với luồng Catalog.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.5]{images/hanh/catalog-test-api-pods-creating}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Một vài pod của luồng dịch vụ Catalog chưa sẵn sàng}
+  \label{fig:catalog-test-api-pod-creating}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.6]{images/hanh/catalog-test-api-show}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Truy cập API /catalog/test diễn ra bình thường}
+  \label{fig:catalog-test-api-show}
+
+\end{figure}
+
+Hình \ref{fig:authen-test-api-pod-creating} và \ref{fig:authen-test-api-show} thể hiện việc kiểm tra với luồng Authentication.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.5]{images/hanh/authen-test-api-pods-creating}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Một vài pod của luồng dịch vụ Authentication chưa sẵn sàng}
+  \label{fig:authen-test-api-pod-creating}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.6]{images/hanh/authen-test-api-show}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Truy cập API /authen/test diễn ra bình thường}
+  \label{fig:authen-test-api-show}
+
+\end{figure}
+
+Hình \ref{fig:order-test-api-pod-creating} và \ref{fig:order-test-api-show} thể hiện việc kiểm tra với luồng Order.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.32]{images/hanh/order-test-api-pods-creating}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Một vài pod của luồng dịch vụ Order chưa sẵn sàng}
+  \label{fig:order-test-api-pod-creating}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.6]{images/hanh/order-test-api-show}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Truy cập API /order/test diễn ra bình thường}
+  \label{fig:order-test-api-show}
+
+\end{figure}
 
 \section{Đánh giá}
