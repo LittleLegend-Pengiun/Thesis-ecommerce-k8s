@@ -1,303 +1,5 @@
-\chapter{Kiểm thử, triển khai và đánh giá hệ thống}
-\section{Triển khai hệ thống}
-\subsection{Triển khai frontend và backend}
-\noindent Sau khi có một ứng dụng hoàn chỉnh, có thể hiển thị được thông tin mặt hàng, ta đóng gói nó thành Docker image và đẩy lên Docker Hub.\\[0.5cm]
-Dockerfile của frontend có nội dung như sau:
-\begin{lstlisting}[language=docker]
-# Use an official Node runtime as a parent image
-FROM node:18 AS builder
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy package.json and package-lock.json to the container
-COPY package.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code to the container
-COPY . .
-
-# Build the Vite React application
-RUN npm run build
-
-# Use an official Nginx runtime as a parent image
-FROM nginx:alpine
-
-# Copy the build output from the builder stage to the nginx web root
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Expose port 80
-EXPOSE 80
-\end{lstlisting}
-
-Dockerfile của backend có nội dung như sau:
-
-\begin{lstlisting}[language=docker]
-# Use an official OpenJDK runtime as a base image with Java 17
-FROM eclipse-temurin:17-jdk-alpine
-
-# Set the working directory to /app
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Build the Spring Boot application
-RUN ./mvnw package -DskipTests
-
-# Expose the port that your Spring Boot application will run on
-EXPOSE 80
-
-# Define the command to run your application
-CMD ["java", "-jar", "target/catalog-0.0.1-SNAPSHOT.jar"]
-\end{lstlisting}
-
-\subsection{Hiện thực Deployment và Service}
-\noindent Ta sử dụng terraform để khởi tạo các service trên, tương ứng với mỗi microservice frontend và backend.
-\subsubsection{Với frontend}
-\noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
-\begin{lstlisting}[language=terraform]
-resource "kubernetes_deployment" "catalog-fe-deploy" {
-  metadata {
-    name = "catalog-fe-deploy"
-    labels = { app = "catalog-fe", tier = "frontend" }
-  }
-  spec {
-    replicas = 1
-    selector {
-      match_labels = { app = "catalog-fe-pod", tier = "frontend" }
-    }
-    template {
-      metadata {
-        name = "catalog-fe-pod"
-        labels = { app = "catalog-fe-pod", tier = "frontend"}
-      }
-      spec {
-        container {
-          name = "catalog-fe"
-          image = "hoanganhleboy/catalog-fe:latest"
-          port { container_port = 80 }
-          env {
-            name = "CONTENT"
-            value = "This is the string from k8s"
-          }
-          image_pull_policy = "Always"
-        }
-      }
-    }
-  }
-}
-
-resource "kubernetes_service" "catalog-fe-service" {
-  metadata {
-    name = "catalog-fe-service"
-    labels = { app = "catalog-fe-service", tier = "frontend" }
-  }
-  spec {
-    selector = { app = "catalog-fe-pod", tier = "frontend"}
-    port {
-      protocol = "TCP"
-      port = 80
-      target_port = 80
-    }
-    type = "NodePort"
-  }
-}
-\end{lstlisting} 
-\subsubsection{Với backend}
-\noindent Catalog microservice sau khi được build thành image sẽ được chạy từ file .jar, thông qua JVM.
-\begin{lstlisting}[language=terraform]
-resource "kubernetes_deployment" "catalog-ms-deploy" {
-  metadata {
-    name = "catalog-ms-deploy"
-    labels = { app = "catalog-ms", tier = "backend" }
-  }
-  spec {
-    replicas = 1
-    selector {
-      match_labels = { app = "catalog-ms-pod", tier = "backend" }
-    }
-    template {
-      metadata {
-        name = "catalog-ms-pod"
-        labels = { app = "catalog-ms-pod", tier = "backend"}
-      }
-      spec {
-        container {
-          name = "catalog-ms"
-          image = "hoanganhleboy/catalog-ms"
-          port { container_port = 8090 } // This port the same with port in the code.
-          resources {
-            requests = {
-              cpu = "256m"
-              memory = "128Mi"
-            }
-            limits = {
-              cpu = "256m"
-              memory = "128Mi"
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-resource "kubernetes_service" "catalog-ms-service" {
-  metadata {
-    name = "catalog-ms-service"
-    labels = { app = "catalog-ms-service", tier = "backend" }
-  }
-  spec {
-    selector = { app = "catalog-ms-pod", tier = "backend"}
-    port {
-      protocol = "TCP"
-      port = 8090 // port expose to outside
-      target_port = 80 // This port the same with port in the code.
-    }
-    type = "NodePort"
-  }
-}
-\end{lstlisting}
-\subsection{Hiện thực Ingress}
-\noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
-\begin{lstlisting}[language=yaml]
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: example-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/enable-directory-listing: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-spec:
-  rules:
-    - http:
-        paths:
-          - pathType: Prefix
-            path: /backend(/|$)(.*)
-            backend:
-              service:
-                name: catalog-ms-service
-                port:
-                  number: 80
-          - pathType: Prefix
-            path: /frontend/?(.*)
-            # path: /
-            backend:
-              service:
-                name: catalog-fe-service
-                port:
-                  number: 80
----
-
-\end{lstlisting}
-\subsection{Hiện thực Horizontal Pod Autoscaler}
-\noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. HPA được hiện thực như sau:
-\begin{lstlisting}[language=yaml]
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: catalog-ms-hpa
-spec:
-  maxReplicas: 10
-  metrics:
-  - resource:
-      name: cpu
-      target:
-        averageUtilization: 10
-        type: Utilization
-    type: Resource
-  minReplicas: 1
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: catalog-ms-deploy
-  behavior:
-    scaleUp:
-      selectPolicy: Max
-      stabilizationWindowSeconds: 60
-      policies:
-      # number of pods that scale in a period of time
-        - periodSeconds: 30
-          type: Pods
-          value: 4
-    scaleDown:
-      selectPolicy: Min
-      stabilizationWindowSeconds: 60
-      policies:
-      # number of pods that scale in a period of time
-        - periodSeconds: 30
-          type: Pods
-          value: 4
-\end{lstlisting}
-\section{Kiểm thử hệ thống}
-\subsection{Thiết lập}
-\noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
-\begin{itemize}
-  \item \lstinline|minikube addons enable ingress|
-  \item \lstinline|minikube addons enable metrics-server|
-\end{itemize}
-Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
-Sau đó, ta sẽ chạy cặp lệnh \lstinline|terraform init| để terraform tải và thiết lập sẵn các dependency cần thiết, và \lstinline|terraform apply --auto-approve| để khởi tạo các dịch vụ Kubernetes được viết bằng terraform.\\[0.5cm]
-Với các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
-\subsection{Kiểm tra tính sẵn sàng - availability}
-\noindent Để kiểm tra tính sẵn sàng của hệ thống, ta sẽ thử xóa pod đi xem chuyện gì sẽ xảy ra.\\[0.5cm]
-Đây là trạng thái ban đầu của các pod:
-\begin{figure}[H]
-  \begin{center}
-  \includegraphics[scale=0.45]{images/hanh/pod_before_delete.png}
-  \caption{Hình ảnh trước khi xóa pod}
-  \end{center}
-\end{figure}
-Còn đây là hình ảnh sau khi vừa xóa:
-\begin{figure}[H]
-  \begin{center}
-  \includegraphics[scale=0.45]{images/hanh/pod_after_delete.png}
-  \caption{Hình ảnh sau khi vừa xóa pod}
-  \end{center}
-\end{figure}
-Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
-\subsection{Kiểm tra tính mở rộng - scalability}
-\subsubsection{Manual scaling}
-\noindent Tính mở rộng là việc hệ thống có thể tạo ra thêm nhiều bản sao của microservice, chạy song song với nhau nhằm đáp ứng được lượng request trên giây tương ứng của người dùng. Với Kubernetes, ta có thể dễ dàng scale up hay scale down hệ thống bằng tay thông qua việc điều chỉnh miền \lstinline|replicas| trong file config của Deployment.\\[0.5cm]
-Ví dụ như hình 5.3 dưới đây, khi ta tăng số lượng pod của catalog-ms từ 1 lên 3
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_up.png}
-    \caption{Hình ảnh khi scale số pod từ 1 lên 3}
-  \end{center}
-\end{figure}
-Ngay lập tức đã có thêm 2 pod mới được tạo ra như hình. Sau đó, khi ta giảm xuống 1 lại thì:
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_down.png}
-    \caption{Hình ảnh khi scale số pod từ 3 xuống 1}
-  \end{center}
-\end{figure}
-Như hình 5.4, ta thấy ngay lập tức có 2 pod bị xóa đi để đảm bảo số lượng pod trong cluster về đúng số lượng quy định.
-
-\subsubsection{Auto scaling}
-Tuy nhiên, trên thực tế, việc scale thủ công như trên sẽ gây tiêu tốn tài nguyên về cả nhân lực và vật lực kha khá, do cần phải có sự can thiệp trực tiếp của con người, và cũng cần con người giám sát 24/24 để đảm bảo có thể điều chỉnh lượng pod phù hợp với nhu cầu lúc đó. Do đó, tốt hơn hết là ta nên thiết lập để Kubernetes có thể thực hiện việc đó một cách tự động thay cho chúng ta, và đó là khi ta cần dùng tới HPA - Horizontal Pod Autoscaler.\\[0.5cm]
-Bài kiểm tra bao gồm các bước sau:
-\begin{enumerate}
-  \item Triển khai Deployment, Service, và HPA cho đối tượng muốn kiểm tra, ở đây là Catalog backend microservice.
-  \item Khởi tạo một pod có chứa container được chạy từ image busybox, pod này sẽ cung cấp cho chúng ta môi trường linux shell. Ta sau đó viết 1 đoạn script tạo một vòng lặp vô hạn gọi tới API của Catalog backend microservice.
-  \item Sử dụng câu lệnh \lstinline|kubectl get hpa --watch| để theo dõi trạng thái của HPA. Một thời gian sau, khi lượng pod đã được scale tới tối đa, ta tắt script để ngưng gọi API. 
-  \item Lại đợi một khoảng thời gian, số pod đã được scale về mức tối thiểu. 
-\end{enumerate}
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.19]{images/hanh/HPA_CPU_scale.png}
-    \caption{Kết quả cuộc thử nghiệm}
-  \end{center}
-\end{figure}
-\noindent \textbf{Mô tả thí nghiệm:} Trong hình 5.5, ta có thể thấy khi bắt đầu gọi API liên tục tới Catalog backend server, thì CPU load bắt đầu tăng mạnh. Khi CPU load vượt ngưỡng 10\% thì HPA sẽ được kích hoạt để tăng số pod trong deployment lên, nhằm mục đích làm giảm PCU load xuống. Tuy nhiên, một thời gian ngắn sau vì CPU load tiếp tục vượt ngưỡng nên HPA lại tiếp tục được kích hoạt tiếp để tăng thêm số pod ở deployment. Việc này chỉ dừng lại cho đến khi số pod đã đạt ngưỡng tối đa cho phép, hoặc CPU load ổn định không tiếp tục vượt ngưỡng nữa thì thôi.\\[0.5cm]
-Sau khi đã scale số pod lên đến mức tối đa là 10, ta terminate busybox đi để ngừng việc gửi request tới Catalog microservice. Lúc này CPU load giảm mạnh xuống còn 0\%. Sau một khoảng thời gian, HPA lại được kích hoạt để giảm số pod xuống. Khi giảm pod, nhận thấy CPU load vẫn tiếp tục dưới ngưỡng, HPA tiếp tục được kích hoạt để giảm tiếp số pod xuống, đến khi nào CPU load xấp xỉ với ngưỡng, hoặc khi đạt đến số pod tối thiểu, ở đây là 1 pod.
-
-\section{Xây dựng tính năng autoscaling với custom metrics (các thông số tùy chỉnh)}
-% Tham khảo chính từ 2 bài viết: https://dev.to/k6/how-to-autoscale-kubernetes-pods-with-keda-testing-with-k6-4nl9\influx-grafana và https://devopscube.com/setup-prometheus-monitoring-on-kubernetes/
+\chapter{Triển khai, kiểm thử, và đánh giá hệ thống}
+\section{Xây dựng tính năng autoscaling với custom metrics (các thông số tùy chỉnh) (remove)}
 
 \subsection{Định nghĩa}
 \noindent Theo Google Cloud Platform\footnote{Dựa theo link: https://cloud.google.com/kubernetes-engine/docs/concepts/custom-and-external-metrics}, một \textit{custom metric} sẽ được truyền từ ứng dụng của bạn mà đang chạy trên Kubernetes.
@@ -492,14 +194,1211 @@ K6 là một công cụ mã nguồn mở được đặc biệt thiết kế đ�
      \item \textbf{Hiệu suất mạnh mẽ}\\
      K6 được thiết kế để xử lý số lượng lớn yêu cầu đồng thời và đáp ứng trong thời gian thực. Điều này giúp các chuyên gia hiệu suất thực hiện kiểm tra trong các điều kiện khắc nghiệt mà vẫn duy trì độ chính xác cao.
 \end{itemize}
-\subsection{Các bước thực hiện}
-\noindent Sau khi đã tìm hiểu các thành phần công nghê sẽ được sử dụng, ta sẽ cài đặt chúng vào Kubernetes cluster. Để có thể scale một service theo request, ta cần hiện thực các dịch vụ sau vào cluster:
+
+\subsection{Kiểm thử (chuyển qua phần kiểm thử )}
+\subsubsection{Thiết lập}
+
+\section{Triển khai hệ thống}
+\subsection{Đóng gói các microservice thành các image}
+\noindent Sau khi có một ứng dụng hoàn chỉnh, ta đóng gói nó thành Docker image và đẩy lên Docker Hub. Cách mỗi đóng gói mỗi mircroservice sẽ được trình bày bên dưới.
+
+\subsubsection*{Frontend}
+
+\begin{lstlisting}[language=docker]
+# Use an official Nginx runtime as a parent image
+FROM nginx:alpine
+  
+# Copy the build output from the builder stage to the nginx web root
+COPY dist /usr/share/nginx/html
+  
+# Expose port 80
+EXPOSE 80
+\end{lstlisting}
+
+\subsubsection*{Catalog microservice}
+
+\begin{lstlisting}[language=docker]
+# Use an official Node.js 18 runtime as a base image
+FROM node:18.18.2-alpine3.18
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install application dependencies
+RUN npm install
+
+# Copy the application code to the container
+COPY . .
+
+# Expose the port on which your application will run
+EXPOSE 8080
+
+# Define the command to run your application
+CMD ["npm", "start"]
+\end{lstlisting}
+
+\subsubsection*{Catalog database microservice}
+
+\begin{lstlisting}[language=docker]
+# Use an official OpenJDK runtime as a base image with Java 17
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY target/*.jar /app/catalog-db.jar
+
+# Expose the port that your Spring Boot application will run on
+EXPOSE 8090
+
+# Define the command to run your application
+CMD ["java", "-jar", "catalog-db.jar"]
+\end{lstlisting}
+
+\subsubsection*{Authentication microservice}
+
+\begin{lstlisting}[language=docker]
+# Use official golang image with version 1.16.6 as the base image
+FROM golang:1.21.6-alpine3.19 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the Go application
+RUN go build -o authenms
+
+# Start a new stage from scratch
+FROM alpine:latest  
+
+# Set environment variables
+ENV PORT=8081
+
+# Set the working directory inside the container
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/authenms .
+
+# Copy the .env file from builder stage
+COPY --from=builder /app/.env .
+
+# Expose port 8080
+EXPOSE 8081
+
+# Command to run the executable
+CMD ["./authenms"]
+\end{lstlisting}
+
+\subsubsection*{Authentication database microservice}
+\begin{lstlisting}[language=docker]
+# Use official golang image with version 1.16.6 as the base image
+FROM golang:1.21.6-alpine3.19 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the Go application
+RUN go build -o authendb
+
+# Start a new stage from scratch
+FROM alpine:latest  
+
+# Set environment variables
+ENV PORT=9091
+
+# Set the working directory inside the container
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/authendb .
+
+# Copy the .env file from builder stage
+COPY --from=builder /app/.env .
+
+# Expose port 8080
+EXPOSE 9091
+
+# Command to run the executable
+CMD ["./authendb"]
+\end{lstlisting}
+
+\subsubsection*{Order microservice}
+\begin{lstlisting}[language=docker]
+# Use an official OpenJDK runtime as a base image with Java 17
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY target/*.jar /app/order-ms.jar
+
+# Build the Spring Boot application
+# RUN ./mvnw package -DskipTests
+
+# Expose the port that your Spring Boot application will run on
+EXPOSE 8082
+
+# Define the command to run your application
+CMD ["java", "-jar", "order-ms.jar"]
+\end{lstlisting}
+
+\subsubsection*{Order database microservice}
+\begin{lstlisting}[language=docker]
+# Use an official OpenJDK runtime as a base image with Java 17
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY target/*.jar /app/order-db.jar
+
+# Expose the port that your Spring Boot application will run on
+EXPOSE 9092
+
+# Define the command to run your application
+CMD ["java", "-jar", "order-db.jar"]
+\end{lstlisting}
+
+\subsubsection*{Notification microservice}
+\begin{lstlisting}[language=docker]
+# Stage 1: Build TypeScript code
+FROM node:18.18.2-alpine3.18 as builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN yarn
+
+# Copy the rest of the application code
+COPY . .
+
+# Compile TypeScript code
+RUN npx tsc
+
+# Stage 2: Create production image
+FROM node:18.18.2-alpine3.18
+
+# Set working directory
+WORKDIR /app
+
+# Copy only necessary files from the builder stage
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/.env ./
+RUN npm install --production
+
+# Expose port (if your application listens on a specific port)
+EXPOSE 8083
+
+# Command to run the application
+CMD ["node", "./dist/index.js"]
+\end{lstlisting}
+
+\subsubsection*{Notification database microservice}
+\begin{lstlisting}[language=docker]
+# Use official golang image with version 1.16.6 as the base image
+FROM golang:1.21.6-alpine3.19 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the Go application
+RUN go build -o notidb
+
+# Start a new stage from scratch
+FROM alpine:latest  
+
+# Set environment variables
+ENV PORT=9083
+
+# Set the working directory inside the container
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/notidb .
+
+# Copy the .env file from builder stage
+COPY --from=builder /app/.env .
+
+# Expose port 8080
+EXPOSE 9083
+
+# Command to run the executable
+CMD ["./notidb"]
+\end{lstlisting}
+
+\subsubsection*{RabbitMQ}
+\begin{lstlisting}[language=docker]
+FROM rabbitmq:management-alpine
+
+RUN rabbitmq-plugins enable rabbitmq_management
+
+EXPOSE 15672
+EXPOSE 5672
+\end{lstlisting}
+\subsection{Triển khai Deployment và Service}
+\subsubsection*{Frontend}
+\noindent Với frontend, khi được đưa lên production, service sẽ được build thành định dạng html, css truyền thống, đi kèm với file javascript chứa logic, và được cung cấp bởi Nginx server, do đó mặc định port sẽ là 80 (HTTP).
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-fe-deploy
+  labels:
+    app: catalog-fe
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-fe-pod
+      tier: frontend
+  template:
+    metadata:
+      name: catalog-fe-pod
+      labels:
+        app: catalog-fe-pod
+        tier: frontend
+    spec:
+      containers:
+      - name: catalog-fe
+        image: hoanganhleboy/catalog-fe:latest
+        ports:
+        - containerPort: 80
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-fe-service
+  labels:
+    app: catalog-fe-service
+    tier: frontend
+spec:
+  selector:
+    app: catalog-fe-pod
+    tier: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+\end{lstlisting} 
+\subsubsection*{Catalog microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-ms-deploy
+  labels:
+    app: catalog-ms
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: catalog-ms-pod
+      labels:
+        app: catalog-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: catalog-ms
+        image: hoanganhleboy/catalog-ms
+        ports:
+        - containerPort: 8080
+        env:
+          - name: PRODUCT_SERVICE_URL
+            value: http://catalog-db-service:9090
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "128Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-ms-service
+  labels:
+    app: catalog-ms-service
+    tier: backend
+spec:
+  selector:
+    app: catalog-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  type: LoadBalancer
+\end{lstlisting}
+\subsubsection*{Catalog database serive}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-db-deploy
+  labels:
+    app: catalog-db
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog-db-pod
+      tier: database
+  template:
+    metadata:
+      name: catalog-db-pod
+      labels:
+        app: catalog-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: catalog-db
+        image: hoanganhleboy/catalog-db
+        ports:
+        - containerPort: 9090
+        env:
+          - name: SPRING_DATASOURCE_URL
+            value: jdbc:postgresql://catalog-dbms-service:5432/catalog
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-db-service
+  labels:
+    app: catalog-db-service
+    tier: database
+spec:
+  selector:
+    app: catalog-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9090
+    targetPort: 9090
+  type: LoadBalancer
+
+\end{lstlisting}
+
+\subsubsection*{Authentication microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authen-ms-deploy
+  labels:
+    app: authen-ms
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authen-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: authen-ms-pod
+      labels:
+        app: authen-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: authen-ms
+        image: hoanganhleboy/authen-ms:latest
+        ports:
+        - containerPort: 8081
+        env:
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+          - name: DB_URL
+            value: http://authen-db-service:9091
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "128Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-ms-service
+  labels:
+    app: authen-ms-service
+    tier: backend
+spec:
+  selector:
+    app: authen-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 8081
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Authentication database service}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authen-db-deploy
+  labels:
+    app: authen-db
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authen-db-pod
+      tier: database
+  template:
+    metadata:
+      name: authen-db-pod
+      labels:
+        app: authen-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: authen-db
+        image: hoanganhleboy/authen-db
+        ports:
+        - containerPort: 9091
+        env:
+          - name: DB
+            value: "host=authen-dbms-service user=postgres password=postgres dbname=authen port=5432"
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "128Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-db-service
+  labels:
+    app: authen-db-service
+    tier: database
+spec:
+  selector:
+    app: authen-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9091
+    targetPort: 9091
+  type: LoadBalancer
+
+\end{lstlisting}
+
+\subsubsection*{Order microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-ms-deploy
+  labels:
+    app: order-ms
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: order-ms-pod
+      labels:
+        app: order-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: order-ms
+        image: hoanganhleboy/order-ms
+        ports:
+        - containerPort: 8082
+        env:
+          - name: ORDER_SERVICE_URL
+            value: http://order-db-service:9092
+          - name: SPRING_RABBITMQ_HOST
+            value: rabbitmq
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-ms-service
+  labels:
+    app: order-ms-service
+    tier: backend
+spec:
+  selector:
+    app: order-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8082
+    targetPort: 8082
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Order database service}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-db-deploy
+  labels:
+    app: order-db
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-db-pod
+      tier: database
+  template:
+    metadata:
+      name: order-db-pod
+      labels:
+        app: order-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: order-db
+        image: hoanganhleboy/order-db
+        ports:
+        - containerPort: 9092
+        env:
+          - name: SPRING_DATASOURCE_URL
+            value: jdbc:postgresql://order-dbms-service:5432/order
+          - name: SPRING_RABBITMQ_HOST
+            value: rabbitmq
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+  
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-db-service
+  labels:
+    app: order-db-service
+    tier: database
+spec:
+  selector:
+    app: order-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9092
+    targetPort: 9092
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Notification microservice}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noti-ms-deploy
+  labels:
+    app: noti-ms
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noti-ms-pod
+      tier: backend
+  template:
+    metadata:
+      name: noti-ms-pod
+      labels:
+        app: noti-ms-pod
+        tier: backend
+    spec:
+      containers:
+      - name: noti-ms
+        image: hoanganhleboy/noti-ms:latest
+        ports:
+        - containerPort: 8083
+        env:
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+          - name: NOTI_DB
+            value: http://noti-db-service:9083
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noti-ms-service
+  labels:
+    app: noti-ms-service
+    tier: backend
+spec:
+  selector:
+    app: noti-ms-pod
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8083
+    targetPort: 8083
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Notification database service}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noti-db-deploy
+  labels:
+    app: noti-db
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noti-db-pod
+      tier: database
+  template:
+    metadata:
+      name: noti-db-pod
+      labels:
+        app: noti-db-pod
+        tier: database
+    spec:
+      containers:
+      - name: noti-db
+        image: hoanganhleboy/noti-db
+        ports:
+        - containerPort: 9083
+        env:
+          - name: DB
+            value: "host=noti-dbms-service user=postgres password=postgres dbname=noti port=5432"
+          - name: RABBITMQ_URL
+            value: amqp://guest:guest@rabbitmq:5672
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noti-db-service
+  labels:
+    app: noti-db-service
+    tier: database
+spec:
+  selector:
+    app: noti-db-pod
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 9083
+    targetPort: 9083
+  type: LoadBalancer
+\end{lstlisting}
+\subsection{Triển khai các database dưới dạng statefulset}
+\subsubsection*{Catalog database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: catalog-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: catalog-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-dbms
+  template:
+    metadata:
+      labels:
+        app: catalog-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: catalog
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: duyphatbk
+        volumeMounts:
+        - name: catalog-dbms-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+  volumeClaimTemplates:
+  - metadata:
+      name: catalog-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-dbms-service
+spec:
+  selector:
+    app: catalog-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Authentication database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: authen-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: authen-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authen-dbms
+  template:
+    metadata:
+      labels:
+        app: authen-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: authen
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        volumeMounts:
+        - name: authen-dbms-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"
+  volumeClaimTemplates:
+  - metadata:
+      name: authen-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authen-dbms-service
+spec:
+  selector:
+    app: authen-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Order database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: order-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: order-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-dbms
+  template:
+    metadata:
+      labels:
+        app: order-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: order
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: duyphatbk
+        volumeMounts:
+        - name: order-dbms-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "256m"
+            memory: "300Mi"
+          limits:
+            cpu: "256m"
+            memory: "300Mi"  
+  volumeClaimTemplates:
+  - metadata:
+      name: order-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-dbms-service
+spec:
+  selector:
+    app: order-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsubsection*{Notification database}
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: noti-dbms-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+
+  ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: noti-dbms-statefulset
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noti-dbms
+  template:
+    metadata:
+      labels:
+        app: noti-dbms
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: noti
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        volumeMounts:
+        - name: noti-dbms-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: noti-dbms-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noti-dbms-service
+spec:
+  selector:
+    app: noti-dbms
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: LoadBalancer
+\end{lstlisting}
+
+\subsection{Triển khai Ingress}
+\noindent Ingress hiện tại đóng vai trò là reverse proxy, expose các Kubernetes service ra bên ngoài cluster.
+\begin{lstlisting}[language=yaml]
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/enable-directory-listing: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+    - http:
+        paths:
+          - pathType: Prefix
+            path: /catalog/?(.*)
+            backend:
+              service:
+                name: catalog-ms-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /authen/?(.*)
+            backend:
+              service:
+                name: authen-ms-service
+                port:
+                  number: 8081
+          - pathType: Prefix
+            path: /order/?(.*)
+            backend:
+              service:
+                name: order-ms-service
+                port:
+                  number: 8082
+          - pathType: Prefix
+            path: /noti/?(.*)
+            backend:
+              service:
+                name: noti-ms-service
+                port:
+                  number: 8083
+          - pathType: Prefix
+            path: /?(.*)
+            backend:
+              service:
+                name: catalog-fe-service
+                port:
+                  number: 80
+\end{lstlisting}
+\subsection{Triển khai Horizontal Pod Autoscaler}
+\noindent Horizontal Pod Autoscaler (HPA) được sử dụng để giúp deployment có thể scale lên và scale xuống số lượng pod tùy theo thông số nào đó của hệ thống. Ví dụ như với \textbf{Catalog microservice}, HPA được hiện thực như sau:
+\begin{lstlisting}[language=yaml]
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: catalog-ms-hpa
+spec:
+  maxReplicas: 10
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 10
+        type: Utilization
+    type: Resource
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: catalog-ms-deploy
+  behavior:
+    scaleUp:
+      selectPolicy: Max
+      stabilizationWindowSeconds: 60
+      policies:
+      # number of pods that scale in a period of time
+        - periodSeconds: 30
+          type: Pods
+          value: 4
+    scaleDown:
+      selectPolicy: Min
+      stabilizationWindowSeconds: 60
+      policies:
+      # number of pods that scale in a period of time
+        - periodSeconds: 30
+          type: Pods
+          value: 4
+\end{lstlisting}
+\subsection{Triển khai Load balancer}
+\noindent Một số nền tảng Kubernetes cluster không có sẵn load balancer, ví dụ trong trường hợp này là minikube. Tuy nhiên, ta vẫn có thể kích hoạt tính năng load balancer thông qua plugin \lstinline|metallb| bằng câu lệnh \lstinline|minikube addons enable metallb|. Sau đó, ta có thể cấu hình miền IP cho load balancer này như sau:
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: metallb-system
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - 192.168.49.10-192.168.49.20
+\end{lstlisting}
+
+\subsection{Triển khai hệ thống metrics server để ghi lại custom metrics}
+\noindent Để có thể scale một service theo request, ta cần hiện thực các dịch vụ sau vào cluster:
 \begin{itemize}
   \item Prometheus server
   \item Keda runtime.
 \end{itemize}
 Các bước thực hiện cụ thể sẽ được mô tả ở các tiểu mục bên dưới.
-\subsubsection{Hiện thực prometheus server}
+\subsubsection{Triển khai prometheus server}
 \noindent Để hiện thực Prometheus server, ta cần làm theo các bước sau:\footnote{https://devopscube.com/setup-prometheus-monitoring-on-kubernetes/}
 % \begin{enumerate}[label=\textbf{Bước \arabic*:}, leftmargin=*]
 \begin{itemize}
@@ -746,7 +1645,7 @@ spec:
   \end{figure}
 
 \end{itemize}
-\subsubsection{Hiện thực Keda runtime}
+\subsubsection{Triển khai Keda runtime}
 \noindent Các ScaledObject của Keda không phải tự nhiên mà có thể vân hành tốt với Kubernetes cluster, mà cần có sư hỗ trợ của keda runtime để có thể vận hành các chức năng cần thiết. Đội ngũ phát triển của Keda đã cung cấp và gói gọn cho chúng ta toàn bộ các cấu hình cần thiết vào trong 1 file cấu hình yaml dài hơn 9700 dòng, mà từ đó ta có thể dễ dàng cài đặt thông qua câu lệnh sau: \lstinline|kubectl apply --server-side -f https://|\lstinline|github.com/kedacore/keda/releases/download/v2.12.1/keda-2.12.1-core.yaml|\\[0.2cm]
 Sau khi quá trình cài đặt hoàn tất, ta có thể kiểm tra các dịch vụ đã được cài vào trong cluster thông qua minikube dashboard, namespace \textbf{keda}.
 \begin{figure}[H]
@@ -757,7 +1656,7 @@ Sau khi quá trình cài đặt hoàn tất, ta có thể kiểm tra các dịch
   \label{}
 \end{figure}
 
-\subsubsection{Hiện thực Keda ScaledObject}
+\subsubsection{Triển khai Keda ScaledObject}
 \noindent Khi Prometheus server đã sẵn sàng để tiếp nhận thông tin, Keda runtime sẵn sàng cung cấp thông tin đó tới các Keda object thông qua API \lstinline|keda.sh|, thì đó là lúc ta có thể tiến hành cài đặt Keda ScaledObject, nhằm phục vụ cho việc scale theo request của dịch vụ theo cấu hình dưới đây.
 
 \begin{lstlisting}[language=yaml]
@@ -802,9 +1701,7 @@ spec:
       threshold: '1'
       query: sum(rate(node_http_requests_total[1m]))
 \end{lstlisting}
-
-\subsection{Kiểm thử}
-\subsubsection{Thiết lập}
+\subsection{Triển khai công cụ kiểm thử - k6}
 \noindent Ta sử dụng một tool chuyên dùng để tạo các request gọi tới hệ thống tên là k6, để chạy bài stress test trong các bài kiểm tra lần này. Tool này cho phép ta thiết lập bài kiểm tra bằng javascript thông qua việc \lstinline|export| các biến đã được thống nhất từ trước.\\[0.5cm]
 Cấu hình của bài kiểm tra có dạng như sau:
 \begin{lstlisting}[language=javascript]
@@ -830,7 +1727,55 @@ export default function () {
 }
 \end{lstlisting}
 Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
-\subsubsection{Kiểm tra khả năng mở rộng của dịch vụ với ScaledObject}
+
+\section{Kiểm thử tính chất thành phần}
+\subsection{Thiết lập}
+\noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
+\begin{itemize}
+  \item \lstinline|minikube addons enable ingress|
+  \item \lstinline|minikube addons enable metrics-server|
+\end{itemize}
+Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
+Vì các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
+
+\subsection{Kiểm tra tính mở rộng - scalability}
+\subsubsection{Manual scaling}
+\noindent Tính mở rộng là việc hệ thống có thể tạo ra thêm nhiều bản sao của microservice, chạy song song với nhau nhằm đáp ứng được lượng request trên giây tương ứng của người dùng. Với Kubernetes, ta có thể dễ dàng scale up hay scale down hệ thống bằng tay thông qua việc điều chỉnh miền \lstinline|replicas| trong file config của Deployment.\\[0.5cm]
+Ví dụ như hình 5.3 dưới đây, khi ta tăng số lượng pod của catalog-ms từ 1 lên 3
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_up.png}
+    \caption{Hình ảnh khi scale số pod từ 1 lên 3}
+  \end{center}
+\end{figure}
+Ngay lập tức đã có thêm 2 pod mới được tạo ra như hình. Sau đó, khi ta giảm xuống 1 lại thì:
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.45]{images/hanh/catalog_ms_scale_down.png}
+    \caption{Hình ảnh khi scale số pod từ 3 xuống 1}
+  \end{center}
+\end{figure}
+Như hình 5.4, ta thấy ngay lập tức có 2 pod bị xóa đi để đảm bảo số lượng pod trong cluster về đúng số lượng quy định.
+
+\subsubsection{Auto scaling}
+Tuy nhiên, trên thực tế, việc scale thủ công như trên sẽ gây tiêu tốn tài nguyên về cả nhân lực và vật lực kha khá, do cần phải có sự can thiệp trực tiếp của con người, và cũng cần con người giám sát 24/24 để đảm bảo có thể điều chỉnh lượng pod phù hợp với nhu cầu lúc đó. Do đó, tốt hơn hết là ta nên thiết lập để Kubernetes có thể thực hiện việc đó một cách tự động thay cho chúng ta, và đó là khi ta cần dùng tới HPA - Horizontal Pod Autoscaler.\\[0.5cm]
+Bài kiểm tra bao gồm các bước sau:
+\begin{enumerate}
+  \item Triển khai Deployment, Service, và HPA cho đối tượng muốn kiểm tra, ở đây là Catalog backend microservice.
+  \item Khởi tạo một pod có chứa container được chạy từ image busybox, pod này sẽ cung cấp cho chúng ta môi trường linux shell. Ta sau đó viết 1 đoạn script tạo một vòng lặp vô hạn gọi tới API của Catalog backend microservice.
+  \item Sử dụng câu lệnh \lstinline|kubectl get hpa --watch| để theo dõi trạng thái của HPA. Một thời gian sau, khi lượng pod đã được scale tới tối đa, ta tắt script để ngưng gọi API. 
+  \item Lại đợi một khoảng thời gian, số pod đã được scale về mức tối thiểu. 
+\end{enumerate}
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.19]{images/hanh/HPA_CPU_scale.png}
+    \caption{Kết quả cuộc thử nghiệm}
+  \end{center}
+\end{figure}
+\noindent \textbf{Mô tả thí nghiệm:} Trong hình 5.5, ta có thể thấy khi bắt đầu gọi API liên tục tới Catalog backend server, thì CPU load bắt đầu tăng mạnh. Khi CPU load vượt ngưỡng 10\% thì HPA sẽ được kích hoạt để tăng số pod trong deployment lên, nhằm mục đích làm giảm PCU load xuống. Tuy nhiên, một thời gian ngắn sau vì CPU load tiếp tục vượt ngưỡng nên HPA lại tiếp tục được kích hoạt tiếp để tăng thêm số pod ở deployment. Việc này chỉ dừng lại cho đến khi số pod đã đạt ngưỡng tối đa cho phép, hoặc CPU load ổn định không tiếp tục vượt ngưỡng nữa thì thôi.\\[0.5cm]
+Sau khi đã scale số pod lên đến mức tối đa là 10, ta terminate busybox đi để ngừng việc gửi request tới Catalog microservice. Lúc này CPU load giảm mạnh xuống còn 0\%. Sau một khoảng thời gian, HPA lại được kích hoạt để giảm số pod xuống. Khi giảm pod, nhận thấy CPU load vẫn tiếp tục dưới ngưỡng, HPA tiếp tục được kích hoạt để giảm tiếp số pod xuống, đến khi nào CPU load xấp xỉ với ngưỡng, hoặc khi đạt đến số pod tối thiểu, ở đây là 1 pod.
+
+\subsubsection{Auto scaling với custom metrics - ScaledObject}
 \noindent Trước khi sử dụng một công nghệ nào đó, ta cần xác định xem công nghệ đó có hoạt động như cách ta mong muốn hay không. Ở đây thì ta sẽ kiểm tra xem khi áp dụng ScaledObject thì microservice \textbf{Catalog} có tự scale lên và scale xuống như lý thuyết hay không.\\[0.5cm]
 Để theo dõi trạng thái của HPA trong một khoảng thời gian liên tục, ta sử dụng lệnh \lstinline|kubectl get hpa --watch|. Sau đó, ta tiến hành khởi động bài kiểm tra bằng lệnh \lstinline|k6 run api-stress-test.js|.\\[0.5cm]
 Sau khi bài kiểm tra kết thúc, ta thu thập được kết quả thông qua terminal như hình dưới.
@@ -843,9 +1788,49 @@ Sau khi bài kiểm tra kết thúc, ta thu thập được kết quả thông q
 \end{figure}
 Thông qua hình trên, ta dễ thấy được là ScaledObject đã làm tốt công việc của mình, khi có thể tự động scale lên số pod từ 1 lên 10 khi lượng request tăng, và khi lượng request giảm được một thời gian, thì đã scale xuống lại về 1.
 
-\subsubsection{Kiểm tra tính hiệu quả của việc auto scaling thông qua số request}
-\noindent Sau khi đã chắc chắn rằng ScaledObject có thể giúp ta scale số pod của microservice dựa theo lượng request, thì ta cần kiếm chứng tính hiệu quả của các thiết lập mà ta đã đưa vào hệ thống.\\[0.5cm]
-Đầu tiên, ta tiến hành chạy bài kiểm tra khi dịch vụ chưa được cung cấp HPA, và kiểm tra xem dịch vụ có thể phục vụ được bao nhiêu trong tổng số request đã được gửi tới hệ thống. Ta được kết quả như hình dưới.
+\subsection{Kiểm tra tính sẵn sàng - availability}
+\subsubsection{Kiểm tra tính sẵn sàng của pod được triển khai bởi Deployment}
+\noindent Để kiểm tra tính sẵn sàng của hệ thống, ta sẽ thử xóa pod đi xem chuyện gì sẽ xảy ra.\\[0.5cm]
+Đây là trạng thái ban đầu của các pod:
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[scale=0.45]{images/hanh/pod_before_delete.png}
+  \caption{Hình ảnh trước khi xóa pod}
+  \end{center}
+\end{figure}
+Còn đây là hình ảnh sau khi vừa xóa:
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[scale=0.45]{images/hanh/pod_after_delete.png}
+  \caption{Hình ảnh sau khi vừa xóa pod}
+  \end{center}
+\end{figure}
+Như ta nhìn thấy trong hình 5.1 và 5.2, khi một pod vừa bị xóa, ngay lập tức một pod khác được khởi động ngay lập tức, thế chỗ cho pod vừa bị xóa. Như vậy, ta có thể kết luận rằng, khi triển khai hệ thống bằng Kubernetes, cụ thể là Deployment, tính sẵn sàng - availability của hệ thống được đảm bảo.
+\subsubsection{Kiểm tra tính sẵn sàng với pod được triển khai bằng Statefulset}
+\noindent Khi triển khai database, việc đảm bảo dữ liệu vẫn còn tồn tại sau khi trải qua sự cố là điều tối quan trọng. Do đó, ta sẽ triển khai các database qua các pod được quản lý bởi Statefulset.\\[0.5cm]
+Ta kiểm tra thử khả năng khôi phục lại dữ liệu của Statefulset pod bằng cách thử xóa pod \lstinline|catalog-dbms-statefulset-0|, khiến một pod mới phải được tạo như hình \ref{fig:catalog-sts-test}.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.4]{images/hanh/catalog-sts-restart}
+  \end{center}
+  \caption{StatefulSet pod được khởi động lại}
+  \label{fig:catalog-sts-test}
+
+\end{figure}
+
+\noindent Sau đó, ta kiểm tra lại trang chủ xem có bị mất hết dữ liệu không, và kết quả là danh sách mặt hàng vẫn còn nguyên.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.4]{images/hanh/catalog-sts-result}
+  \end{center}
+  \caption{Dữ liệu mặt hàng vẫn còn nguyên}
+  \label{}
+
+\end{figure}
+
+\subsubsection{Kiểm tra tính sẵn sàng của dịch vụ khi có tải cao}
+\noindent Sau khi đã kiểm tra tính mở rộng, thì ta cần kiếm chứng tính hiệu quả mà autoscaling đem lại với khả năng chịu tải của dịch vụ.\\[0.5cm]
+Đầu tiên, ta tiến hành chạy bài kiểm tra bằng k6 khi dịch vụ chưa được cung cấp HPA, và kiểm tra xem dịch vụ có thể phục vụ được bao nhiêu trong tổng số request đã được gửi tới hệ thống. Ta được kết quả như hình dưới.
 \begin{figure}[H]
   \begin{center}
     \includegraphics[scale=0.44]{images/hanh/test-without-hpa.png}
@@ -867,12 +1852,46 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 \begin{figure}[H]
   \begin{center}
     \includegraphics[scale=0.44]{images/hanh/test-with-hpa-pod-resource-ultilization.png}
-    \caption{Trạng thái các pod khi diễn ra bài kiểm tra của k6}
   \end{center}
-  \label{}
+  \caption{Trạng thái các pod khi diễn ra bài kiểm tra của k6}
+  \label{fig:pod-status-k6}
 \end{figure}
-Đi tìm hiểu sâu hơn về các chỉ số các pod của Catalog microservice, ta nhận thấy rằng chỉ có một vài pod (được đánh dấu đỏ trên hình), là được sử dụng gần hết công suất, thông qua việc chỉ số CPU ultilization gần tối đa. Đây là biểu hiện của việc lượng tải được phân bố không đều vào các pod, từ đó dẫn đến pod thì bị quá tải, pod thì chạy với rất ít tải. Nguyên nhân dẫn đến hành vi này là do môi trường giả lập Kubernetes cluster trên local không cung cấp được load balancer cho Kubernetes cluster, do đó việc chia tải từ Kubernetes service vào các pod diễn ra theo trình tự ngẫu nhiên, dẫn tới hiện tượng như miêu tả trên hình.\\[0.5cm]
+Đi tìm hiểu sâu hơn về các chỉ số các pod của Catalog microservice, ta nhận thấy rằng chỉ có một vài pod (được đánh dấu đỏ trên hình), là được sử dụng gần hết công suất, thông qua việc chỉ số CPU ultilization gần tối đa. 
+Đây là biểu hiện của việc lượng tải được phân bố không đều vào các pod, từ đó dẫn đến pod thì bị quá tải, pod thì chạy với rất ít tải. Nguyên nhân dẫn đến hành vi này là do môi trường giả lập Kubernetes cluster trên local không cung cấp được load balancer cho Kubernetes cluster, do đó việc chia tải từ Kubernetes service vào các pod diễn ra theo trình tự ngẫu nhiên, dẫn tới hiện tượng như miêu tả trên hình \ref{fig:pod-status-k6}.
 \textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.
+
+\noindent \textbf{Kiểm tra:} Đầu tiên, ta đổi môi trường triển khai ứng dụng từ minikube trên Windows sang minikube trên Linux. Ta sử dụng k6 để giả lập tình huồng khi dịch vụ nhận lượng request tăng cao. Với 1 pod bình thường của microservice \lstinline|catalog-ms|, ta thu được kết quả như hình \ref{fig:catalog-stress-test-no-hpa}.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.15]{images/hanh/component-catalog-no-hpa}
+  \end{center}
+  \caption{Kết quả kiểm tra khi không có HPA}
+  \label{fig:catalog-stress-test-no-hpa}
+
+\end{figure}
+
+Với minikube trên Linux, ta có thể triển khai Metal Load Balancer. Khi sử dụng service LoadBalancer kèm với Horizontal Pod Autoscaler, ta có được một giải pháp giúp hệ thống có thể tự động mở rộng, tăng khả năng đáp ứng dịch vụ, từ đó tăng tính sẵn sàng.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.63]{images/hanh/component-catalog-hpa-cpu}
+  \end{center}
+  \caption{Kết quả kiểm tra khi sử dụng Kubernetes HPA với LoadBalancer}
+  \label{fig:component-hpa}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.15]{images/hanh/component-catalog-hpa-keda}
+  \end{center}
+  \caption{Kết quả kiểm tra khi sử dụng Keda ScaledObject với LoadBalancer}
+  \label{fig:component-keda}
+
+\end{figure}
+
+\noindent Thông qua các hình ảnh trên, cùng với thông tin triển khai được cung cấp trước đó, ta có thể kết luận được rằng, hệ thống sẽ được gia tăng tính sẵn sàng, khi ta có thể mở rộng và phân phối tải hợp lý vào các pod. Sự chênh lệch giữa hiệu năng của HPA truyền thống (hình \ref{fig:component-hpa}), và việc sử dụng Keda ScaledObject (hình \ref{fig:component-keda}) là không đáng kể khi 2 giải pháp này chưa được tối ưu về hiệu năng.
+
 \section{Kiểm thử hệ thống}
 \subsection{Kiểm thử API}
 \begin{itemize}
@@ -902,88 +1921,6 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 \subsection{Kiểm thử yêu cầu chức năng cho ứng dụng web}
 Để kiểm tra tính đúng đắn của hệ thống so với các yêu cầu đặt ra ban đầu cho ứng dụng web, nhóm
 thực hiện kiểm tra các chức năng cụ thể sau đây:
-% \subsubsection{Màn hình trang chủ}
-% \begin{itemize}
-%   \item \textbf{Hiển thị danh sách sản phẩm}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách tất cả sản phẩm của cửa hàng, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá.Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Tìm kiếm sản phẩm}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm phù hợp với từ khóa tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với từ khóa tìm kiếm, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Lọc sản phẩm theo khoảng giá}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm có giá trong khoảng giá tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với khoảng giá tìm kiếm, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Lọc sản phẩm theo danh mục}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Truy cập vào trang chủ
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm thuộc danh mục tìm kiếm, mỗi sản phẩm bao gồm các thông tin cơ bản như tên, giá, hình ảnh, số lượng đã bán, đánh giá. Danh sách được phân trang, mỗi trang hiển thị tối đa 8 sản phẩm.
-%       \item Kết quả thực tế: Danh sách sản phẩm được hiển thị đúng với danh mục tìm kiếm, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-% \end{itemize}
-% \subsubsection{Màn hình chi tiết sản phẩm}
-% \begin{itemize}
-%   \item \textbf{Hiển thị thông tin chi tiết sản phẩm}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Không
-%       \item Các bước thực hiện: Click vào sản phẩm cần xem chi tiết
-%       \item Kết quả mong đợi: Hiển thị đầy đủ thông tin chi tiết của sản phẩm, bao gồm tên, giá, hình ảnh, mô tả, số lượng đã bán, đánh giá, số lượng tồn kho, hãng sản xuất, danh mục, ngày tạo, ngày ra mắt.
-%       \item Kết quả thực tế: Thông tin chi tiết sản phẩm được hiển thị đúng, đầy đủ thông tin cần thiết.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Thêm sản phẩm vào giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào sản phẩm cần thêm vào giỏ hàng, chọn số lượng cần mua, chọn nút "Thêm vào giỏ hàng"
-%       \item Kết quả mong đợi: Hiển thị thông báo thêm sản phẩm vào giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng tăng lên.
-%       \item Kết quả thực tế: Thông báo thêm sản phẩm vào giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng tăng lên đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-% \end{itemize}
-% \subsubsection{Màn hình giỏ hàng}
-% \begin{itemize}
-%   \item \textbf{Hiển thị thông tin giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng
-%       \item Kết quả mong đợi: Hiển thị danh sách sản phẩm trong giỏ hàng, mỗi sản phẩm bao gồm thông tin cơ bản như tên, giá, hình ảnh, số lượng, tổng tiền. Hiển thị tổng số lượng sản phẩm, tổng tiền cần thanh toán.
-%       \item Kết quả thực tế: Danh sách sản phẩm trong giỏ hàng được hiển thị đúng, đầy đủ thông tin cần thiết. Tổng số lượng sản phẩm, tổng tiền cần thanh toán được hiển thị đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Xóa sản phẩm khỏi giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng, chọn nút xóa tương ứng với sản phẩm cần xóa
-%       \item Kết quả mong đợi: Hiển thị thông báo xóa sản phẩm khỏi giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng giảm đi.
-%       \item Kết quả thực tế: Thông báo xóa sản phẩm khỏi giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng giảm đi đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-%   \item \textbf{Cập nhật số lượng sản phẩm trong giỏ hàng}
-%     \begin{itemize}
-%       \item Yêu cầu đăng nhập: Có
-%       \item Các bước thực hiện: Click vào biểu tượng giỏ hàng, điều chỉnh số lượng mong muốn, hệ thống sẽ tự động cập nhật theo số lượng mới
-%       \item Kết quả mong đợi: Hiển thị thông báo cập nhật số lượng sản phẩm trong giỏ hàng thành công, số lượng sản phẩm trong giỏ hàng được cập nhật.
-%       \item Kết quả thực tế: Thông báo cập nhật số lượng sản phẩm trong giỏ hàng thành công hiển thị đúng, số lượng sản phẩm trong giỏ hàng được cập nhật đúng.
-%       \item Kết luận: Đạt yêu cầu
-%     \end{itemize}
-% \end{itemize}
-% \subsubsection{Màn hình đăng nhập}
 \subsubsection{Màn hình trang chủ}
 \begin{table}[H]
   \centering
@@ -1119,3 +2056,274 @@ thực hiện kiểm tra các chức năng cụ thể sau đây:
   \caption{Kiểm thử các yêu cầu chức năng màn hình thanh toán}
   \label{tab:payment-table}
 \end{table}
+
+\subsection{Kiểm thử tính mở rộng - scalability}
+
+\subsubsection{Thiết lập}
+\noindent Để phục vụ cho các thí nghiệm, các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order| đều được tạo thêm một luồng API dùng riêng cho việc này, gọi là \lstinline|/test|.\\[0.5cm]
+Sử dụng k6, ta đặt luồng dịch vụ dưới lượng tải cao để xem xét khả năng tự động mở rộng (auto scaling) của các microservice bên trong đã được trển khai với autoscaling.
+
+\subsubsection{Kết quả}
+\noindent Số pod có thể tự động scale trong bài kiểm tra, xày ra ở cả microservice và database microservice.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-catalog-with-hpa-show-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Số lượng pod của luồng dịch vụ Catalog}
+  \label{}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-with-hpa-show-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Số lượng pod của luồng dịch vụ Authentication}
+  \label{}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-order-with-hpa-show-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Số lượng pod của luồng dịch vụ Order}
+  \label{}
+
+\end{figure}
+
+\subsection{Kiểm thử tính sẵn sàng - availability, khi có tải cao}
+\subsubsection{Thiết lập}
+
+\noindent Ta sử dụng API \lstinline|/test| để dùng cho các bài kiểm tra có gọi API tới dịch vụ, tương tự như ỏ phần kiểm thử tính mở rộng ở trên. \\[0.5cm]
+Ở bài kiểm tra lần này, ta sẽ sử dụng k6 để tạo lượng tải cao cho API \lstinline|/test| ở các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order|, sau đó sẽ so sánh sự khác biệt giữa số lượng request phục vụ thành công (\lstinline|200 OK|) giữa các kịch bản:
+\begin{itemize}
+  \item \textbf{Kịch bản 1:} Các microservice trong luồng chỉ có 1 pod, không có khả năng auto scaling.
+  \item \textbf{Kịch bản 2:} Các microservice trong luồng có autoscaling.
+  \item \textbf{Kịch bản 3:} Các microservice trong luồng có autoscaling, và database có số instance bằng số pod tối đa mà các microservice có thể scale up được.
+\end{itemize}
+
+\subsubsection{Kết quả thử nghiệm với luồng Catalog}
+\noindent Ta thu được kêt quả như các hình bên dưới.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-catalog-no-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Catalog ở kịch bản 1}
+  \label{fig:fullflow-catalog-no-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-catalog-with-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Catalog ở kịch bản 2}
+  \label{fig:fullflow-catalog-with-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.25]{images/hanh/fullflow-test/full-flow-catalog-10-db-with-lb}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Catalog ở kịch bản 3}
+  \label{fig:fullflow-catalog-with-hpa-10-db}
+
+\end{figure}
+
+\subsubsection{Kết quả thử nghiệm với luồng Authentication}
+\noindent Ta thu được kêt quả như các hình bên dưới.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-no-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Authentication ở kịch bản 1}
+  \label{fig:fullflow-authen-no-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-with-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Authentication ở kịch bản 2}
+  \label{fig:fullflow-authen-with-hpa}
+
+\end{figure}
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/full-flow-authen-10-db-with-lb}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Authentication ở kịch bản 3}
+  \label{fig:fullflow-authen-with-hpa-10-db}
+
+\end{figure}
+
+\subsubsection{Kết quả thử nghiệm với luồng Order}
+\noindent Ta thu được kêt quả như các hình bên dưới.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-no-hpa}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 1}
+  \label{fig:fullflow-order-no-hpa}
+
+\end{figure}
+
+\noindent Khi tiến hành thí nghiệm ở luồng \lstinline|order|, ta chứng kiến được hiện tượng mà khi thí nghiệm với 2 luồng \lstinline|catalog| và \lstinline|authen| không được chứng kiến.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-hpa-fst-time}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 2, lần chạy đầu tiên}
+  \label{fig:fullflow-order-with-hpa-fst-time}
+
+\end{figure}
+
+Sau đó, ta thực hiện lại thí nghiệm lần nữa, cách lần thử nghiệm đầu tiên khoảng 3 phút. 
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-hpa-snd-time}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 2, lần chạy thứ hai}
+  \label{fig:fullflow-order-with-hpa-snd-time}
+
+\end{figure}
+
+\noindent Thí nghiệm cho kịch bản 3 cũng diễn ra cách thí nghiệm cho kịch bản 2 không lâu, khoảng 3 phút.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.65]{images/hanh/fullflow-test/order-hpa-8-db}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Khả năng phục vụ request của luồng Order ở kịch bản 3}
+  \label{fig:fullflow-order-with-hpa-8-db}
+
+\end{figure}
+
+\subsubsection{Nhận xét}
+\noindent Tổng hợp lại kết quả thử nghiệm, ta được bảng \ref{tab:stress-test-result}.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|c|c|c|c|}
+  \hline
+  \textbf{Luồng dịch vụ} & \multicolumn{1}{c|}{\textbf{Kịch bản 1}} & \multicolumn{1}{c|}{\textbf{Kịch bản 2}} & \multicolumn{1}{c|}{\textbf{Kịch bản 3}}\\ \hline
+  Catalog & 1831 requests & 5201 requests & 9323 requests \\ \hline
+  Authentication & 7861 request & 15101 requets & 61490 requets \\ \hline
+  Order & 10070 requests & \parbox[t]{3.4cm}{10007 requests (lần 1) \\ 59052 requests (lần 2)} & 88997 requests \\ \hline
+  \end{tabular}%
+  % }
+  \caption{Tổng hợp lượng request được phục vụ ở các luồng qua các kịch bản}
+  \label{tab:stress-test-result}
+\end{table}
+
+Thông qua bảng \ref{tab:stress-test-result}, ta nhận thấy rằng khi số lượng pod phục vụ cho request tăng (số pod của luồng dịch vụ tăng dần qua các kịch bản), thì số lượng request mà luồng dịch vụ có thể phục vụ cũng tăng lên, chứng tỏ sự hiệu quả của giải pháp.
+
+\subsection{Kiểm thử tính sẵn sàng - availability, khi có dịch vụ bị sập}
+\subsubsection{Thiết lập}
+\noindent Ở bài kiểm tra này, ta sẽ kiểm tra tính sẵn sàng, thông suốt của các luồng dịch vụ \lstinline|catalog|, \lstinline|authen|, \lstinline|order|, khi có yêu cầu lấy dữ liệu từ database, với tình huống một số pod của luồng dịch vụ không sẵn sàng.\\[0.5cm]
+Ta cũng sẽ sử dụng API \lstinline|/test| để kiểm tra sự thông suốt của luồng dịch vụ, khi có một pod bị khởi động lại.
+
+\subsubsection{Kiểm tra}
+\noindent Với cấu hình hiện tại, cluster có số lượng deployment như hình \ref{fig:deployments-final}.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.5]{images/hanh/deployments-final}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Trạng thái deployment của các microservice lúc không tải}
+  \label{fig:deployments-final}
+
+\end{figure}
+
+Khi mỗi deploymennt có từ 2 pod trở lên, trừ khi toàn bộ pod trong cùng một deploymennt cùng bị chết, nếu không thì luồng dịch vụ vẫn phục vụ bình thường.\\[0.5cm]
+Hình \ref{fig:catalog-test-api-pod-creating} và \ref{fig:catalog-test-api-show} thể hiện việc kiểm tra với luồng Catalog.
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.5]{images/hanh/catalog-test-api-pods-creating}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Một vài pod của luồng dịch vụ Catalog chưa sẵn sàng}
+  \label{fig:catalog-test-api-pod-creating}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.6]{images/hanh/catalog-test-api-show}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Truy cập API /catalog/test diễn ra bình thường}
+  \label{fig:catalog-test-api-show}
+
+\end{figure}
+
+Hình \ref{fig:authen-test-api-pod-creating} và \ref{fig:authen-test-api-show} thể hiện việc kiểm tra với luồng Authentication.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.5]{images/hanh/authen-test-api-pods-creating}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Một vài pod của luồng dịch vụ Authentication chưa sẵn sàng}
+  \label{fig:authen-test-api-pod-creating}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.6]{images/hanh/authen-test-api-show}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Truy cập API /authen/test diễn ra bình thường}
+  \label{fig:authen-test-api-show}
+
+\end{figure}
+
+Hình \ref{fig:order-test-api-pod-creating} và \ref{fig:order-test-api-show} thể hiện việc kiểm tra với luồng Order.
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.32]{images/hanh/order-test-api-pods-creating}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Một vài pod của luồng dịch vụ Order chưa sẵn sàng}
+  \label{fig:order-test-api-pod-creating}
+
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.6]{images/hanh/order-test-api-show}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Truy cập API /order/test diễn ra bình thường}
+  \label{fig:order-test-api-show}
+
+\end{figure}
+\subsubsection{Tính toán tính sẵn sàng của toàn hệ thống}
+Tính dựa trên con số từ Google Cloud (GKE)\\
+Tính cho 2 trường hợp: chưa triển khai master-slave DB và đã triển khai master-slave DB
+\section{Đánh giá, nhận xét}
+\subsection{Đánh giả giải pháp cho tính mở rộng - scalability của hệ thống}
+\noindent Với việc sử dụng kết hợp khả năng tự động mở rộng (autoscaling) của các công cụ từ Kubernetes (HPA) và các bên thứ 3 (Keda ScaledObject), cùng với khả năng theo dõi chỉ số từ metrics-server (Kubernetes) hay Prometheus server (Prometheus), ta có thể cấu hình để tăng/giảm số lượng các pod của mỗi deployment tùy theo nhu cầu hiện tại của hệ thống theo cách linh hoạt nhất.\\[0.5cm]
+Tuy nhiên, các thông số cấu hình hiện tại vẫn còn chưa tối ưu, do đó sự khác biệt khi sử dụng giải pháp sẵn có của Kubernetes là HPA kèm metrics-server, so với dùng Keda ScaledObject kèm Prometheus server, là không đáng kể. 
+\subsection{Đánh giá giải pháp cho tính sẵn sàng - availability của hệ thống}
+\subsubsection{Trường hợp hệ thống phải chịu tải cao}
+\noindent Với việc sử dụng kết hợp khả năng phân phối tải của Load Balancer và khả năng duy trì số lượng pod của ReplicaSets/Deployment, hệ thống có thể phân phối lượng tải tới các pod một cách đồng đều, từ đó làm tăng khả năng chịu tải khi tăng số lượng pod, như đã thống kê qua các kịch bản ở bảng \ref{tab:stress-test-result}.\\[0.5cm]
+Tuy nhiên, khi kết hợp khả năng phân phối tải (load balancing) với khả năng tự động co dãn (autoscaling), ta cũng cần lưu ý tới thời gian mà mỗi pod cần để có thể bắt đầu phục vụ. Điều này được thể hiện rõ nhất ở luồng dịch vụ Order. Luồng dịch vụ này sử dụng Java Spring boot cho cả microservice và database service, và Spring boot có thời gian khởi động khá lâu, khi đi kèm việc thiết lập kết nối tới Postgres Database và RabbitMQ. Do đó, ở kịch bản 2, số lượng request được phục vụ ở lần chạy thứ nhất (hình \ref{fig:fullflow-order-with-hpa-fst-time}) chỉ bằng với số request ở kịch bản 1, khi luồng không bật tính năng tự động co dãn (autoscaling). Qua lần chạy thứ 2 (hình \ref{fig:fullflow-order-with-hpa-snd-time}), khi các pod đã sẵn sàng phục vụ, thì ta có kết quả vượt trội hơn hẳn so với lần chạy đầu. Tương tự như vậy với kịch bản 3 (hình \ref{fig:fullflow-order-with-hpa-8-db}), khi các pod đã sẵn sàng và chưa kịp scale down, ta cũng chứng kiến khả năng chịu tải vượt trội.
+\subsubsection{Trường hợp có một hoặc một vài pod bị lỗi}
+\noindent Khi triển khai từ 2 pod trở lên trên một deployment, một luồng dịch vụ chỉ bị chặn đứng khi toàn bộ số pod trong deploymennt đó đều không thể phục vụ được. Do đó, về mặt lý thuyết, khi ta triển khai một deploymennt với số pod càng nhiều thì chỉ số availability của dịch vụ sẽ càng cao. Bài toán lúc này sẽ quay về việc cân bằng giữa tính sẵn sàng của hệ thống và khả năng tài chính của chủ thể triển khai hệ thống đó.
