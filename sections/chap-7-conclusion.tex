@@ -1,35 +1,69 @@
 \chapter{Tổng kết}
-\section{Kết quả đạt được}
+\section{Quá trình thực hiện đề tài}
 \subsection{Đối với việc tìm hiểu và phân tích nghiệp vụ}
 \noindent Căn cứ vào mục tiêu, nhiệm vụ của đề tài đã đề ra, nhóm đã thực hiện được những điều sau:
 \begin{itemize}
-    \item Tiến hành phân tích các yêu cầu cần có của hệ thống, xác định trọng tâm của đồ án là thực hiện hệ thống thỏa mãn được tính sẵn sàng và tính mở rộng cao.
-    \item Xác định các hướng giải quyết bài toán có thể thực hiện được.
+    \item Tiến hành phân tích các yêu cầu cần có của hệ thống, xác định trọng tâm của đồ án là xây dựng một hệ thống thỏa mãn được tính sẵn sàng và tính mở rộng cao 
+cho các sản phẩm công nghệ, nhưng vẫn đầy đủ các chức năng cơ bản của một hệ thống thương mại điện tử.
+    \item So sánh, đánh giá ưu nhược điểm của  các hệ thống thương mại điện tử hiện nay để đưa ra giải pháp phù hợp với điều kiện thực tế.
     \item Phân tích các yêu cầu chức năng và phi chức năng của hệ thống.
+    \item Xác định được các service cần thiết để xây dựng hệ thống, cũng như cách chúng tương tác với nhau.
 \end{itemize}
 
 \subsection{Đối với cơ sở lý thuyết và công nghệ}
 \noindent Dựa vào mục tiêu, yêu cầu nghiệp vụ của đồ án, nhóm đã làm được những việc sau:
 \begin{itemize}
     \item Tiến hành so sánh, tham khảo, phân tích các bài viết, ví dụ của các hệ thống tương tự để đưa ra giải pháp phù hợp với điều kiện thực tế.
+    \item So sánh, đối chiếu ưu điểm và nhược điểm cả các kiểu kiến trúc hệ thống để chọn ra kiến trúc phù hợp nhất, đó là kiến trúc microservice.
     \item Tìm hiểu các khái niệm, ý tưởng, kiến trúc, cách hoạt động của hệ thống Kubernetes.
-    \item Tìm hiểu được cách các hệ thống microservice được đưa lên Kubernetes.
-    \item Chọn ngôn ngữ lập trình, framework, công nghệ phù hợp để xây dụng hệ thống: Frontend (web), các microservice backend và database, công cụ để xây dựng hệ thống Kubernetes ở môi trường local.
+    \item Nghiên cứu phương phát hiện thực và triển khai hệ thống microservice trên Kubernetes.
+    \item Lựa chọn ngôn ngữ lập trình, framework, công nghệ phù hợp để xây dụng hệ thống: Frontend (web), các microservice backend và cơ sở dữ liệu.
+    \item Lựa chọn hệ quản trị cơ sở dữ liệu phù hợp với hệ thống, cũng như công cụ để xây dựng hệ thống Kubernetes ở môi trường local.
+    \item Tìm hiểu các phương pháp kiểm thử hệ thống để kiểm tra tính sẵn sàng và tính mở rộng cao.
+    \item Nghiên cứu các phương pháp giám sát, theo dõi hệ thống để đảm bảo hệ thống luôn hoạt động ổn định.
+    \item Phân tích sự phù hợp giữa các loại message broker để chọn ra loại phù hợp nhất với hệ thống, đó là RabbitMQ.
+    \item Nghiên cứu các phương pháp giúp người dùng nhận được thông báo thời gian thực khi có sự kiện xảy ra trên hệ thống, đó là Websocket.
 \end{itemize}
 \subsection{Đối với phân tích và thiết kế hệ thống}
 \noindent Dựa vào các thông tin cơ sở lý thuyết, công nghệ đã tìm hiểu, cộng thêm các trải nghiệm thực tế thì nhóm đã đưa ra được thiết kế kiến trúc hoàn chỉnh của hệ thống:
 \begin{itemize}
-    \item Đưa ra được kiến trúc hoàn chỉnh cho hệ thống, tận dụng các dịch vụ, giải pháp của nền tảng Kubernetes để hoàn thành mục tiêu, nhiệm vụ đề ra trong đồ án.
+    \item Thiết kế sơ đồ kiến trúc hoàn chỉnh của hệ thống, bao gồm các service, cách chúng tương tác với nhau và 
+cách chúng tương tác với người dùng.
+    \item Thiết kế cơ sở dữ liệu cho hệ thống, bao gồm các bảng, các trường, các quan hệ giữa các bảng.
+    \item Xây dừng mô hình dữ liệu cho hệ thống, bao gồm các entity, các repository, các service, các controller.
+    \item Thiết kế giao diện người dùng bằng ứng dụng figma, bao gồm các trang, các chức năng, cách người dùng tương tác với hệ thống.
+    \item Thiết kế các luồng xử lý chính của hệ thống, bao gồm luồng xử lý đăng nhập, đăng ký, mua hàng, thanh toán, quản lý đơn hàng và quản lý thông báo.
+    \item Thiết kế đầy đủ các biểu đồ diagram cho hệ thống, bao gồm các biểu đồ use case, sequence diagram, class diagram, component diagram và activity diagram.
+    \item Thiết kế các service, các API cho hệ thống, bao gồm các API cho frontend và các API cho các service khác.
+    \item Đưa ra được kiến trúc hoàn chỉnh cho hệ thống, tận dụng các dịch vụ, giải pháp của nền tảng 
+Kubernetes để hoàn thành mục tiêu, nhiệm vụ đề ra trong đồ án.
     \item Tối ưu lại giải pháp cho phù hợp với điều kiện kinh tế hiện tại của mỗi cá nhân.
 \end{itemize}
 \subsection{Đối với quá trình phát triển ứng dụng}
-\noindent Trong suốt giai đoạn Đồ án chuyên ngành, nhóm đã làm việc một cách bài bản, có quy trình, kế hoạch cụ thể và chi tiết.
+\noindent Trong suốt hai giai đoạn Đồ án chuyên nghành và Đồ án tốt nghiệp, nhóm đã làm việc một cách khoa học và rõ ràng:
+\subsubsection{Các giai đoạn phát triển}
+    \begin{itemize}
+        \item Tìm hiểu các hệ thống thương mại điện tử phổ biến hiện nay và các công nghệ đã được áp dụng.
+        \item Phân tích và đưa ra phạm vị của hệ thống sẽ phát triển.
+        \item Phân tích nghiệp vụ để đưa ra các yêu cầu chức năng và phi chức năng mà hệ thống cần có.
+        \item Phân tích và thiết kế hệ thống.
+        \item Hiện thực hệ thống.
+        \item Triển khai hệ thống
+        \item Kiểm thử hệ thống.
+    \end{itemize}
+\subsubsection{Tổ chức và quản lý mã nguồn}
+\noindent Nhóm sử dụng Git và Github để tăng hiệu quả công việc, giúp mỗi thành viên có thể làm việc độc lập nhưng vẫn có thể tương tác với nhau một cách dễ dàng, đồng thời cũng giúp quản lý mã nguồn dễ dàng hơn.
+\subsubsection{Quản lý công việc}
 \begin{itemize}
-    \item Nhóm đã thực hiện đầy đủ các giai đoạn: Phân tích, tìm hiểu yêu cầu nghiệp vụ; Thiết kế hệ thống; Triển khai ở quy mô nhỏ.
-    \item Công cụ tổ chức và quản lý mã nguồn: Nhóm sử dụng Git và Github để làm tăng hiệu quả công việc.
-    \item Về luồng công việc: Nhóm có áp dụng scrum-agile vào việc quản lý, phân chia, theo dõi công việc của các thành viên trong nhóm, tuy nhiên cũng có điều chỉnh cho phù hợp với đặc thù của từng thành viên.
+    \item Sử dụng mô hình Scrum - Agile để quán lý quá trình và tiến độ công việc.
+    \item Sử dụng Google Drive và Google Sheet để quản lý tài liệu và công việc.
+    \item Các công việc theo từng giai đoạn được chia thành các Sprint nhỏ để dễ quản lý và theo dõi.
+    \item Mỗi Sprint sẽ có tương ứng một Sprint Backlog chứa danh sách các công việc cụ thể mà nhóm sẽ làm trong Sprint đó.
+    \item Mỗi Sprint kéo dài 2 tuần, cuối mỗi Sprint sẽ có một buổi meeting để đánh giá công việc đã làm và đưa ra kế hoạch cho Sprint tiếp theo.
+    \item Thường xuyên tổ chức các buổi meeting hàng tuần để trao đổi cũng như đưa ra giải pháp cho các
+    vấn đề gặp phải trong quá trình hiện thực. 
 \end{itemize}
-\section{Đánh giá giải pháp và kết quả đạt được}
+\section{Đánh giá kết quả đạt được}
 \subsection{Đánh giá thiết kế}
 \noindent Hệ thống được xây dựng nhằm mục đích là thử nghiệm các lý thuyết để có được một hệ thống vừa có tính sẵn sàng cao mà vừa có tính mở rộng cao. Đồng thời, giải pháp được áp dụng trong hệ thống có thể sử dụng với nhiều môi trường cloud khác nhau, tăng tính linh động khi triển khai thực tế.
 \subsubsection{Ưu điểm}
@@ -48,30 +82,47 @@
 \subsubsection{Tính khả thi về mặt Công nghệ}
 \noindent Hệ thống sử dụng các tool, framework nổi tiếng, được cộng đồng hỗ trợ nhiệt tình nên việc bảo trì, bảo dưỡng, sửa chữa lỗi sẽ dễ dàng hơn nhiều.
 \begin{itemize}
-    \item Frontend: ReactJS
-    \item Backend: Java Springboot, RabbitMQ
-    \item Database: Postgres
-    \item Deploy: Kubernetes, Docker, Minikube.
+    \item Frontend: ReactJS, Redux, Redux toolkit, Material-UI, Axios, Formik, Yup, React-Router, Styled-Component, SASS, SocketIO, thư viện Antd.
+    \item Backend: Java Springboot, Golang Fiber, NodeJS Express, Websocket
+    \item Database: PostgreSQL
+    \item Deployment: Kubernetes, Docker, Minikube, Keda, Prometheus
+    \item Message Broker: RabbitMQ
+    \item Testing: k6
+\end{itemize}
+\noindent Các công nghệ trên đều đảm bảo được các tiêu chí được nhóm xem xét để đảm bảo tính khả thi về
+mặt công nghệ như sau:
+\begin{itemize}
+    \item Khả năng xử lý dữ liệu: RabbitMQ cung cấp cơ chế để lưu trữ các message trong hàng đợi trước
+    khi được xử lý.
+    \item Hiệu năng (performance): Các công nghệ như Golang, NodeJs hay Python đều có các cơ chế để xử
+    lý các tác vụ đồng thời, tăng tốc độ xử lý các request đến server.
 \end{itemize}
 \subsubsection{Tính khả thi về mặt Kinh tế}
 \noindent Các công nghệ được dùng đều là mã nguồn mở, miễn phí, do đó sẽ không tốn chi phí bản quyền.\\[0.5cm]
-Về việc triển khai hệ thống, nhóm sẽ ưu tiên kiểm thử ở local trước khi đưa lên cloud, do đó cũng không cần tốn nhiều chi phí vận hành cho các nhà cung cấp dịch vụ trong giai đoạn phát triển hệ thống.
+Về việc triển khai hệ thống, nhóm đã chứng mình thành công các lý thuyết được đưa ra ở môi trường local, do đó
+sẽ không tốn chi phí để sử dụng các nền tảng dịch vụ cloud.
 \subsubsection{Tính khả thi về mặt Vận hành}
-\noindent Về phía người dùng, hệ thống không có gì khác biệt so với các hệ thống thương mại điện tử khác, nên không cần làm quen bất kỳ điều gì mới. Về phía doanh nghiệp, họ cần có kỹ sư DevOp để quản lý và bảo trì hệ thống, nhưng khối lượng công việc cũng không nặng nếu như họ đã có sẵn các luồng CI/CD tự động cho việc nâng cấp và cập nhật hệ thống.
+\noindent Về phía người dùng, hệ thống không có gì khác biệt so với các hệ thống thương mại điện tử khác, 
+nên không cần làm quen bất kỳ điều gì mới. Về phía doanh nghiệp, họ cần có kỹ sư DevOp để quản lý và bảo trì hệ thống, 
+nhưng khối lượng công việc cũng không nặng nếu như họ đã có sẵn các luồng CI/CD tự động cho việc nâng cấp và 
+cập nhật hệ thống.
 \subsection{Đánh giá lợi ích}
-\noindent Về mặt thực tiễn, hệ thống có thể xem như một bản mẫu cho tổ chức, doanh nghiệp muốn xây dựng một hệ thống thương mại điện tử đáng tin cậy, đảm bảo luôn sẵn sàng phục vụ khách hàng, cũng như dễ dàng thêm và mở rộng tính năng mới.
+\noindent Về mặt thực tiễn, hệ thống có thể xem như một bản mẫu cho tổ chức, doanh nghiệp muốn xây dựng một hệ 
+thống thương mại điện tử đáng tin cậy, đảm bảo luôn sẵn sàng phục vụ khách hàng, cũng như dễ dàng thêm và mở 
+rộng tính năng mới.
 \subsection{Đánh giá kết quả đạt được}
 \subsubsection{Ưu điểm}
 \begin{itemize}
     \item Đáp ứng được các yêu cầu cơ bản của một hệ thống thương mại điện tử.
     \item Giải quyết được bài toán về tính sẵn sàng cao và tính mở rộng cao.
     \item Sử dụng Message Queue để giao tiếp giữa các microservices một cách hiệu quả, đặc biệt kết hợp với kiến trúc microservice giúp tăng tính decoupling và tính mở rộng (về tính năng) cho hệ thống sau này
+    \item Sử dụng Websocket để gửi thông báo thời gian thực giữa server và client.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-    \item Kiến trúc khá phức tạp, tốn nhiều thời gian, công sức để triển khai.
+    \item Kiến trúc khá phức tạp, tốn nhiều thời gian, công sức để phát triển và triển khai.
     \item Chưa có luồng CI/CD để tự động hóa, hỗ trợ phát triển hệ thống.
-    \item Chức năng Autoscaling còn chưa được tùy chỉnh hợp lý.
+    \item Chức năng Autoscaling còn cần được tối ưu thêm.
 \end{itemize}
 \section{Hướng phát triển đề tài trong tương lai}
 \noindent Trải qua quá trình nghiên cứu lý thuyết, tổng hợp đưa ra giải pháp và xây dựng phiên bản thử nghiệm, nhóm nhận thấy trong tương lai đề tài còn cần thực hiện thêm các công việc như:
@@ -79,6 +130,5 @@ Về việc triển khai hệ thống, nhóm sẽ ưu tiên kiểm thử ở loc
     \item Triển khai trên môi trường cloud để có đánh giá chính xác hơn.
     \item Xây dựng luồng CI/CD để tăng hiệu quả công việc.
     \item Xây dựng tính năng gợi ý sản phầm phù hợp với lich sử mua hàng của từng cá nhân.
-    \item Nghiên cứu tận dụng thêm các plugin của Kubernetes để có thể scale hệ thống hiệu quả hơn.
-    \item Nghiên cứu thêm về cách đo tính sẵn sàng của hệ thống.
+    \item Nghiên cứu để có thể tối ưu được quá trình autoscaling.
 \end{itemize}
