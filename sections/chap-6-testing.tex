@@ -1876,7 +1876,7 @@ Với minikube trên Linux, ta có thể triển khai Metal Load Balancer. Khi s
   \begin{center}
     \includegraphics[scale=0.63]{images/hanh/component-catalog-hpa-cpu}
   \end{center}
-  \caption{Kết quả kiểm tra khi sử dụng Kubernetes HPA}
+  \caption{Kết quả kiểm tra khi sử dụng Kubernetes HPA với LoadBalancer}
   \label{fig:component-hpa}
 
 \end{figure}
@@ -1885,7 +1885,7 @@ Với minikube trên Linux, ta có thể triển khai Metal Load Balancer. Khi s
   \begin{center}
     \includegraphics[scale=0.15]{images/hanh/component-catalog-hpa-keda}
   \end{center}
-  \caption{Kết quả kiểm tra khi sử dụng Keda ScaledObject}
+  \caption{Kết quả kiểm tra khi sử dụng Keda ScaledObject với LoadBalancer}
   \label{fig:component-keda}
 
 \end{figure}
@@ -2322,6 +2322,8 @@ Tính cho 2 trường hợp: chưa triển khai master-slave DB và đã triển
 \noindent Với việc sử dụng kết hợp khả năng tự động mở rộng (autoscaling) của các công cụ từ Kubernetes (HPA) và các bên thứ 3 (Keda ScaledObject), cùng với khả năng theo dõi chỉ số từ metrics-server (Kubernetes) hay Prometheus server (Prometheus), ta có thể cấu hình để tăng/giảm số lượng các pod của mỗi deployment tùy theo nhu cầu hiện tại của hệ thống theo cách linh hoạt nhất.\\[0.5cm]
 Tuy nhiên, các thông số cấu hình hiện tại vẫn còn chưa tối ưu, do đó sự khác biệt khi sử dụng giải pháp sẵn có của Kubernetes là HPA kèm metrics-server, so với dùng Keda ScaledObject kèm Prometheus server, là không đáng kể. 
 \subsection{Đánh giá giải pháp cho tính sẵn sàng - availability của hệ thống}
-\subsubsection{Trường hợp hệ thống chịu tải cao}
-\noindent Với việc sử dụng kết hợp khả năng phân phối tải của Load Balancer và khả năng duy trì số lượng pod của ReplicaSets/Deployment, 
+\subsubsection{Trường hợp hệ thống phải chịu tải cao}
+\noindent Với việc sử dụng kết hợp khả năng phân phối tải của Load Balancer và khả năng duy trì số lượng pod của ReplicaSets/Deployment, hệ thống có thể phân phối lượng tải tới các pod một cách đồng đều, từ đó làm tăng khả năng chịu tải khi tăng số lượng pod, như đã thống kê qua các kịch bản ở bảng \ref{tab:stress-test-result}.\\[0.5cm]
+Tuy nhiên, khi kết hợp khả năng phân phối tải (load balancing) với khả năng tự động co dãn (autoscaling), ta cũng cần lưu ý tới thời gian mà mỗi pod cần để có thể bắt đầu phục vụ. Điều này được thể hiện rõ nhất ở luồng dịch vụ Order. Luồng dịch vụ này sử dụng Java Spring boot cho cả microservice và database service, và Spring boot có thời gian khởi động khá lâu, khi đi kèm việc thiết lập kết nối tới Postgres Database và RabbitMQ. Do đó, ở kịch bản 2, số lượng request được phục vụ ở lần chạy thứ nhất (hình \ref{fig:fullflow-order-with-hpa-fst-time}) chỉ bằng với số request ở kịch bản 1, khi luồng không bật tính năng tự động co dãn (autoscaling). Qua lần chạy thứ 2 (hình \ref{fig:fullflow-order-with-hpa-snd-time}), khi các pod đã sẵn sàng phục vụ, thì ta có kết quả vượt trội hơn hẳn so với lần chạy đầu. Tương tự như vậy với kịch bản 3 (hình \ref{fig:fullflow-order-with-hpa-8-db}), khi các pod đã sẵn sàng và chưa kịp scale down, ta cũng chứng kiến khả năng chịu tải vượt trội.
 \subsubsection{Trường hợp có một hoặc một vài pod bị lỗi}
+\noindent Khi triển khai từ 2 pod trở lên trên một deployment, một luồng dịch vụ chỉ bị chặn đứng khi toàn bộ số pod trong deploymennt đó đều không thể phục vụ được. Do đó, về mặt lý thuyết, khi ta triển khai một deploymennt với số pod càng nhiều thì chỉ số availability của dịch vụ sẽ càng cao. Bài toán lúc này sẽ quay về việc cân bằng giữa tính sẵn sàng của hệ thống và khả năng tài chính của chủ thể triển khai hệ thống đó.
