@@ -2125,8 +2125,131 @@ Hình \ref{fig:order-test-api-pod-creating} và \ref{fig:order-test-api-show} th
 
 \end{figure}
 \subsubsection{Tính toán tính sẵn sàng của toàn hệ thống}
-Tính dựa trên con số từ Google Cloud (GKE)\\
-Tính cho 2 trường hợp: chưa triển khai master-slave DB và đã triển khai master-slave DB
+% Tính dựa trên con số từ Google Cloud (GKE)\\
+% Tính cho 2 trường hợp: chưa triển khai master-slave DB và đã triển khai master-slave DB. \\
+\textbf{Công thức tính tính sẵn sàng của hệ thống:}\\[0.5cm]
+Tính sẵn sàng của hệ thống thường được tính bằng cách nhân các xác suất sẵn sàng của từng thành phần trong hệ thống với nhau, dựa trên giả định rằng các thành phần hoạt động độc lập. Công thức tổng quát là:\\[0.5cm]
+\textbf{Tính tính sẵn sàng của hệ thống = $\Pi$ (Tính tính sẵn sàng của từng thành phần)}.\\[0.5cm]
+Hệ thống bao gồm các flow chính như sau:
+\begin{itemize}
+    \item Catalog
+    \item Order
+    \item Authen
+    \item Notification
+    \item Front end
+\end{itemize}
+Với mỗi flow, ta sẽ tính toán tính availability ở 03 trường hợp:
+\begin{itemize}
+    \item \textbf{Trường hợp 1}: Mỗi deployment sẽ triển khai 1 pod, statefulset cho database sẽ triển khai 1 pod (single instance database).
+    \item \textbf{Trường hợp 2}: Mỗi deployment sẽ triển khai 2 pods, statefulset cho database sẽ triển khai 1 pod (single instance database).
+    \item \textbf{Trường hợp 3}: Mỗi deployment sẽ triển khai 2 pods, statefulset cho database sẽ triển khai 2 pods (multi-instances database).
+\end{itemize}
+Ngoài ra, như hình \ref{fig:architecture-deploy}, thì 2 luồng Notification và Order còn có kết nối với RabbitMQ, do đó sẽ được tính thêm chỉ số availability của pod RabbitMQ.\\[0.5cm]
+1. \textbf{Catalog Flow}:
+\begin{center}
+  $\indent$ {catalog-ms $\rightarrow$ catalog-db $\rightarrow$ catalog-dbms}
+\end{center}
+
+\textbf{Trường hợp 1}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{1}$) x 0.999$\sp{1}$ = 99.70\%.
+\end{itemize}
+\textbf{Trường hợp 2}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) x 0.999$\sp{1}$ = 99.89\%.
+\end{itemize}
+\textbf{Trường hợp 3}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) = 99.99\%.
+\end{itemize}
+\textit{Trong đó}:
+\begin{itemize}
+    \item 0.999: là một chỉ số về tính sẵn sàng của các pods được triển khai trên Google Kubernetes Engine (GKE) Autopilot. Đây là một cam kết từ Google Cloud về việc các pods sẽ có thời gian hoạt động (uptime) tối thiểu 99.9\% khi được triển khai trong cấu hình này.
+    \item mũ 1, 2: là số lượng pod của các microservice theo thứ tự trên luồng flow.
+\end{itemize}
+
+2. \textbf{Order Flow}:
+\begin{center}
+  $\indent$ order-ms $\rightarrow$ rabbitmq $\rightarrow$ order-db $\rightarrow$ order-dbms
+\end{center}
+\textbf{Trường hợp 1}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{1}$) x 0.999$\sp{1}$ = 99.60\%.
+\end{itemize}
+\textbf{Trường hợp 2}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{2}$) x 0.999$\sp{1}$ = 99.79\%.
+\end{itemize}
+\textbf{Trường hợp 3}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x x (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) = 99.89\%.
+\end{itemize}
+\textit{Trong đó}:
+\begin{itemize}
+    \item 0.999: là một chỉ số về tính sẵn sàng của các pods được triển khai trên Google Kubernetes Engine (GKE) Autopilot. Đây là một cam kết từ Google Cloud về việc các pods sẽ có thời gian hoạt động (uptime) tối thiểu 99.9\% khi được triển khai trong cấu hình này.
+    \item mũ 1, 2: là số lượng pod của các microservice theo thứ tự trên luồng flow.
+\end{itemize}
+3. \textbf{Noti Flow}: 
+\begin{center}
+  $\indent$ noti-ms $\rightarrow$ rabbitmq $\rightarrow$ noti-db $\rightarrow$ noti-dbms
+\end{center}
+\textbf{Trường hợp 1}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{1}$) x 0.999$\sp{1}$ = 99.60\%.
+\end{itemize}
+\textbf{Trường hợp 2}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{2}$) x 0.999$\sp{1}$ = 99.79\%.
+\end{itemize}
+\textbf{Trường hợp 3}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x x (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) = 99.89\%.
+\end{itemize}
+\textit{Trong đó}:
+\begin{itemize}
+    \item 0.999: là một chỉ số về tính sẵn sàng của các pods được triển khai trên Google Kubernetes Engine (GKE) Autopilot. Đây là một cam kết từ Google Cloud về việc các pods sẽ có thời gian hoạt động (uptime) tối thiểu 99.9\% khi được triển khai trong cấu hình này.
+    \item mũ 1, 2: là số lượng pod của các microservice theo thứ tự trên luồng flow.
+\end{itemize}
+4. \textbf{Authen Flow}:
+\begin{center}
+  $\indent$ authen-ms $\rightarrow$ authen-db $\rightarrow$ authen-dbms
+\end{center}
+\textbf{Trường hợp 1}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{1}$) x (1-(1-0.999)$\sp{1}$) x 0.999$\sp{1}$ = 99.70\%.
+\end{itemize}
+\textbf{Trường hợp 2}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) x 0.999$\sp{1}$ = 99.89\%.
+\end{itemize}
+\textbf{Trường hợp 3}:
+\begin{itemize}
+    \item Tính sẵn sàng = (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) x (1-(1-0.999)$\sp{2}$) = 99.99\%.
+\end{itemize}
+\textit{Trong đó}:
+\begin{itemize}
+    \item 0.999: là một chỉ số về tính sẵn sàng của các pods được triển khai trên Google Kubernetes Engine (GKE) Autopilot. Đây là một cam kết từ Google Cloud về việc các pods sẽ có thời gian hoạt động (uptime) tối thiểu 99.9\% khi được triển khai trong cấu hình này.
+    \item mũ 1, 2: là số lượng pod của các microservice theo thứ tự trên luồng flow.
+\end{itemize}
+5. \textbf{Front end Flow}: 
+\begin{itemize}
+  \item Chỉ có Front-end pod.
+  \item Tính sẵn sàng = 99.90\%.
+\end{itemize}
+\textbf{Tính tính sẵn sàng của cả hệ thống = $\Pi$ (Tính tính sẵn sàng của từng thành phần)} = $\Pi$ (catalog, order, noti, authen, front-end)
+\begin{itemize}
+    \item \textbf{Trường hợp 1}: Tính sẵn sàng của hệ thống = 0.9970 x 0.9960 x 0.9960 x 0.9970 x 0.9990 = 98.50\%.
+    \item \textbf{Trường hợp 2}: Tính sẵn sàng của hệ thống = 0.9989 x 0.9979 x 0.9979 x 0.9989 x 0.9990 = 99.26\%.
+    \item \textbf{Trường hợp 3}: Tính sẵn sàng của hệ thống = 0.9999 x 0.9989 x 0.9989 x 0.9999 x 0.9990 = 99.66\%.
+\end{itemize}
+
+\textbf{Kết Luận:}
+$\indent$ Quan sát số liệu kết quả tính toán từ cả 3 trường hợp trên, ta có thể thấy tính sẵn sàng cả hệ thống của các trường hợp theo thứ tự là:
+\begin{center}
+  \textbf{Trường hợp 1 < Trường hợp 2 < Trường hợp 3.}
+\end{center}
+Từ đó, đi đến kết luận là mô hình sử dụng nhiều pod trên mỗi microservice sẽ có tính sẵn sàng cao hơn mô hình sử dụng ít pod hơn, mô hình muti instance database sẽ có tính sẵn sàng cao hơn so với mô hình single instance database.
+
 \section{Đánh giá, nhận xét}
 \subsection{Đánh giả giải pháp cho tính mở rộng - scalability của hệ thống}
 \noindent Với việc sử dụng kết hợp khả năng tự động mở rộng (autoscaling) của các công cụ từ Kubernetes (HPA) và các bên thứ 3 (Keda ScaledObject), cùng với khả năng theo dõi chỉ số từ metrics-server (Kubernetes) hay Prometheus server (Prometheus), ta có thể cấu hình để tăng/giảm số lượng các pod của mỗi deployment tùy theo nhu cầu hiện tại của hệ thống theo cách linh hoạt nhất.\\[0.5cm]
