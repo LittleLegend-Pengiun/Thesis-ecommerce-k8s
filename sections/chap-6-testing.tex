@@ -200,7 +200,7 @@ K6 là một công cụ mã nguồn mở được đặc biệt thiết kế đ�
 
 \section{Triển khai hệ thống}
 \subsection{Đóng gói các microservice thành các image}
-\noindent Sau khi có một ứng dụng hoàn chỉnh, ta đóng gói nó thành Docker image và đẩy lên Docker Hub. Cách mỗi đóng gói mỗi mircroservice sẽ được trình bày bên dưới.\\[0.5cm]
+\noindent Sau khi có một ứng dụng hoàn chỉnh, ta đóng gói nó thành Docker image và đẩy lên Docker Hub. Cách mỗi đóng gói mỗi mircroservice sẽ được trình bày bên dưới.
 
 \subsubsection*{Frontend}
 
@@ -1736,7 +1736,6 @@ Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn r
   \item \lstinline|minikube addons enable metrics-server|
 \end{itemize}
 Với addon ingress, ta có thể thiết lập và cấu hình ingress cho cluster. Addon metrics-server đóng vai trò cung cấp, theo dõi các thông số của pod (cpu, memory) nhằm phục vụ cho HPA.\\[0.5cm]
-
 Vì các dịch vụ được viết bằng yaml, ta cần chạy lệnh \lstinline|kubectl apply -f <file_name>| với \lstinline|<file_name>| là tên file config được viết bằng yaml.
 
 \subsection{Kiểm tra tính mở rộng - scalability}
@@ -2315,5 +2314,14 @@ Hình \ref{fig:order-test-api-pod-creating} và \ref{fig:order-test-api-show} th
   \label{fig:order-test-api-show}
 
 \end{figure}
-
-\section{Đánh giá}
+\subsubsection{Tính toán tính sẵn sàng của toàn hệ thống}
+Tính dựa trên con số từ Google Cloud (GKE)\\
+Tính cho 2 trường hợp: chưa triển khai master-slave DB và đã triển khai master-slave DB
+\section{Đánh giá, nhận xét}
+\subsection{Đánh giả giải pháp cho tính mở rộng - scalability của hệ thống}
+\noindent Với việc sử dụng kết hợp khả năng tự động mở rộng (autoscaling) của các công cụ từ Kubernetes (HPA) và các bên thứ 3 (Keda ScaledObject), cùng với khả năng theo dõi chỉ số từ metrics-server (Kubernetes) hay Prometheus server (Prometheus), ta có thể cấu hình để tăng/giảm số lượng các pod của mỗi deployment tùy theo nhu cầu hiện tại của hệ thống theo cách linh hoạt nhất.\\[0.5cm]
+Tuy nhiên, các thông số cấu hình hiện tại vẫn còn chưa tối ưu, do đó sự khác biệt khi sử dụng giải pháp sẵn có của Kubernetes là HPA kèm metrics-server, so với dùng Keda ScaledObject kèm Prometheus server, là không đáng kể. 
+\subsection{Đánh giá giải pháp cho tính sẵn sàng - availability của hệ thống}
+\subsubsection{Trường hợp hệ thống chịu tải cao}
+\noindent Với việc sử dụng kết hợp khả năng phân phối tải của Load Balancer và khả năng duy trì số lượng pod của ReplicaSets/Deployment, 
+\subsubsection{Trường hợp có một hoặc một vài pod bị lỗi}
