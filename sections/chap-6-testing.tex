@@ -1538,6 +1538,10 @@ export default function () {
 \end{lstlisting}
 Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
 
+\subsection{Triển khai mô hình Master - Slave Replication với Postgres Database}
+\noindent Tham khảo từ bài viết: "Cấu hình PostgreSQL Master Slave Replication trên Kubernetes" của tác giả Quân Huỳnh.\footnote{Nguồn tham khảo: https://devopsvn.tech/kubernetes-practice/cau-hinh-postgresql-master-slave-replication-tren-kubernetes}\\[0.5cm]
+Viết theo bài viết ở link trên, đồng thời lồng config của PR-61 vào.
+
 \section{Kiểm thử tính chất thành phần}
 \subsection{Thiết lập}
 \noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
