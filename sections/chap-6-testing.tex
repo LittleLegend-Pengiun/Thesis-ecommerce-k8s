@@ -1703,8 +1703,57 @@ Với minikube trên Linux, ta có thể triển khai Metal Load Balancer. Khi s
 \noindent Thông qua các hình ảnh trên, cùng với thông tin triển khai được cung cấp trước đó, ta có thể kết luận được rằng, hệ thống sẽ được gia tăng tính sẵn sàng, khi ta có thể mở rộng và phân phối tải hợp lý vào các pod. Sự chênh lệch giữa hiệu năng của HPA truyền thống (hình \ref{fig:component-hpa}), và việc sử dụng Keda ScaledObject (hình \ref{fig:component-keda}) là không đáng kể khi 2 giải pháp này chưa được tối ưu về hiệu năng.
 
 \subsubsection{Kiểm tra sự hiệu quả của cấu hình Horizontal Pod Autoscaler so với mặc định}
-\noindent ahshdfshd
+\noindent \textbf{Thiết lập}\\[0.5cm]
+Sử dụng k6, ta sẽ kiểm tra khả năng scale cũng như khả năng chịu tải của \lstinline|catalog-ms| với HPA cấu hình mặc định của Kubernetes, và cấu hình đã được tùy chỉnh của nhóm.\\[0.5cm]
+Với cấu hình mặc định, ta sẽ triển khai bằng câu lệnh:
+\begin{center}
+  \lstinline|kubectl autoscale deployment catalog-ms-deploy --min=1 --max=10|
+\end{center}
+Cấu hình tùy chỉnh của nhóm nằm ở file \lstinline|deployment-n-service/catalog-hpa.yml|, và sẽ được triển khai (sau khi \lstinline|cd| đến thư mục) bằng câu lệnh:
+\begin{center}
+  \lstinline|kubectl apply -f catalog-hpa.yml|
+\end{center}
+\textbf{Kết quả}\\[0.5cm]
+Kết quả thử nghiệm được thể hiện qua các hình dưới:
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.45]{images/hanh/hpa_efficent_test/default-2}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Kết quả scale của HPA mặc định khi chạy bài stress test}
+  \label{fig:HPA-default-scale}
+\end{figure}
+% 2222222222222222222222222222222
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.45]{images/hanh/hpa_efficent_test/default-2-test-result}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Kết quả bài stress test của HPA mặc định}
+  \label{fig:HPA-default-scale-result}
+\end{figure}
+% 33333333333333333333333333333
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.45]{images/hanh/hpa_efficent_test/custom}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Kết quả scale của HPA đã được tùy chỉnh khi chạy bài stress test}
+  \label{fig:HPA-custom-scale}
+\end{figure}
+% 4444444444444444444444444444
+\begin{figure}[H]
+  \begin{center}
+      \includegraphics[scale = 0.45]{images/hanh/hpa_efficent_test/custom-result}
+      \vspace*{1mm}
+  \end{center}
+  \caption{Kết quả bài stress test của HPA đã được tùy chỉnh}
+  \label{fig:HPA-custom-scale-result}
+\end{figure}
+\textbf{Nhận định}\\[0.5cm]
+Ta thấy rằng HPA sử dụng các thông số mặc định của Kubernetes thì chỉ đáp ứng được việc có thể tự mở rộng được, tuy nhiên, tốc độ mở rộng không cao (hình \ref{fig:HPA-default-scale}), từ đó dẫn đến việc khả năng đáp ứng được lượng request lớn trong thời gian ngắn không được đảm bảo (hình \ref{fig:HPA-default-scale-result}). Với cấu hình đã được hiệu chỉnh, dịch vụ đã có khả năng mở rộng nhanh (hình \ref{fig:HPA-custom-scale}), từ đó cho khả năng chịu tải tốt hơn (hình \ref{fig:HPA-custom-scale-result}) so với mặc định. 
 
+% =============================================================== %
 \section{Kiểm thử hệ thống}
 \subsection{Kiểm thử API}
 \begin{itemize}
