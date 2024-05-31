@@ -466,4 +466,22 @@ Bên cạnh đó, Kubernetes còn đảm bảo được hệ thống sẽ đáp 
 \end{itemize}
 \noindent Đa phần kiến trúc microservice được ưu tiên áp dụng vì đây là một mô hình ít phụ thuộc vào nhau nên chúng có thể được triển khai, quản lý và mở rộng độc lập với nhau, đồng thời cũng giảm áp lực cho hệ thống vì chúng không cần phải tương tác trực tiếp với nhau mà thông qua message queue (Apache Kafka, RabbitMQ, ActiveMQ, và Microsoft Azure Service Bus).
 \subsection{Đề xuất giải pháp}
-\noindent Từ các phân tích và kết luận ở trên, nhóm quyết định sẽ xây dựng hệ thống dưới dạng microservice và deloy ứng dụng bằng Kubernetes. Với Kubernetes, ứng dụng sẽ đáp ứng được tính mở rộng và tính sẵn sàng cao thông qua một số dịch vụ mà Kubernetes cung cấp: deloyment, HPA, masternode v.v. Các service của hệ thống sẽ giao tiếp với nhau thông qua message queue.
+\noindent Từ các phân tích và kết luận ở trên, nhóm quyết định sẽ xây dựng hệ thống dưới dạng microservice và triển khai ứng dụng bằng Kubernetes. Các dịch vụ sau của Kubernetes sẽ giúp hệ thống có được tính mở rộng:
+\begin{itemize}
+    \item Deployment: Là dịch vụ thường được khuyến khích sử dụng nhất khi muốn triển khai một ứng dụng lên Kubernetes. Deployment cho phép chúng ta cấu hình chi tiết cho ứng dụng được triển khai bên trong pod, đồng thời bản thân Deploymennt cũng bao gồm cả ReplicaSets, giúp chúng ta có thể định nghĩa và duy trì một số lượng replicas cố định. Hơn hết, có nhiều biện pháp cho phép chúng ta điều chỉnh lượng replicas này.
+    \item Horizontal Pod Autoscaler (HPA): Là một dịch vụ không bắt buộc, được triển khai kèm theo Deployment, HPA sẽ tự động đánh giá những thông số được thu thập của từng pod trong Deployment, từ đó đưa ra quyết định điều chỉnh số lượng replicas (bản sao) một cách tự động theo những cấu hình đã được cung cấp từ trước.
+\end{itemize}
+Để đạt được tính sẵn sàng, hệ thống có thể tân dụng các dich vụ Kubernetes sau:
+\begin{itemize}
+    \item Deploymennt/ReplicaSets: Ngoài việc hỗ trợ triển khai ứng dụng với số bản sao mong muốn, Deployment còn giúp duy trì số lượng bản sao ở mức chính xác với cấu hình. Do đó, khi có một pod bị lỗi, không thể chạy tiếp, Deploymennt sẽ tự động khởi động lại pod đó hoặc hủy pod đó đi và khởi tạo lại một pod mới, duy trì sự sẵn sàng của ứng dụng.
+    \item StatefulSet: Là một phiên bản đặc biệt của Deployment, ngoài các tính năng của một Deployment, StatefulSet còn hỗ trợ lưu trữ lại các trạng thái của từng pod, đảm bảo các pod khi khởi động lại sẽ quay trở về đúng trạng thái cũ trước đó. Điều này đặc biệt hữu dụng khi ta triển khai các cơ sở dữ liệu trên Kubernetes.
+    \item Load Balancer: Đóng vai trò như một bộ cân bằng tải, Load Balancer giúp phân phối tải vào các pod một cách đồng đều nhất có thể. Kết hợp với khả năng mở rộng của các dịch vụ ở trên, giúp làm tăng khả năng chịu tải, từ đó gia tăng tính sẵn sàng của hệ thống.
+\end{itemize}
+Ngoài ra. ta còn sử dụng thêm các công cụ, dịch vụ khác, như:
+\begin{itemize}
+    \item Kubernetes Service: Đóng vai trò như đầu mối kết nối cho các Deploymennt, góp phần hình thành nên hệ thống mạng của các ứng dụng triển khai trên Kubernetes.
+    \item Kubernetes Metrics Server: Thu thập dữ liệu, thông số từ các pod bên trong cluster.
+    \item Kubernetes Ingress: Là reverse proxy cho các ứng dụng bên trong và bên ngoài cluster.
+    \item RabbitMQ: Đóng vai trò lưu giữ các thông điệp mà các microservice gửi cho nhau, đảm bảo tính toàn vẹn của dữ liệu.
+\end{itemize}
+%  Với Kubernetes, ứng dụng sẽ đáp ứng được tính mở rộng và tính sẵn sàng cao thông qua một số dịch vụ mà Kubernetes cung cấp: deloyment, HPA, masternode v.v. Các service của hệ thống sẽ giao tiếp với nhau thông qua message queue.
