@@ -1537,7 +1537,26 @@ export default function () {
 }
 \end{lstlisting}
 Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
-
+\section{Thiết kế các bài kiểm tra, thí nghiệm}
+\noindent Ta có thể kiểm tra tính đúng đắn của việc áp dụng các dịch vụ Kubernetes để giải quyết vấn đề nêu ra, ở mặt vi mô và vĩ mô, thông qua 2 dạng bài kiểm tra: kiểm tra tính chất thành phần (component test) và kiếm tra hệ thống (system test).
+\begin{itemize}
+  \item \textbf{Kiểm tra tính chất thành phần (component test)}: Các bài kiểm tra ở phần này được thực hiện với mục đích kiểm tra xem các dịch vụ Kubernetes được áp dụng có đáp ứng được kỳ vọng đã được đề ra hay không.
+  \begin{itemize}
+    \item \textbf{Kỳ vọng về khả năng cung cấp tính mở rộng}: Kiểm tra khả năng cung cấp tính mở rộng của Deployment (Manual scaling), HPA và ScaledObject (Auto scaling).
+    \item \textbf{Kỳ vọng về khả năng cung cấp tính sẵn sàng}: Kiểm tra khả năng cung cấp tính sẵn sàng của các dịch vụ:
+    \begin{itemize}
+      \item Deployment: Duy trì đầy đủ số lượng dịch vụ.
+      \item StatefulSet: Duy trì đầy đủ số lượng và trạng thái dịch vụ.
+      \item Kiểm tra khả năng cung cấp dịch vụ dưới áp lực tải cao khi sử dụng các dịch vụ có khả năng cung cấp tính mở rộng (HPA, ScaledObject, Deployment) kết hợp với (hoặc không kết hợp với) Load Balancer.
+    \end{itemize}
+  \end{itemize}
+  \item \textbf{Kiểm tra hệ thống (system test)}: Các bài kiểm tra ở phần này nhằm xác nhận xem hệ thống có cung cấp đầy đủ các chức năng, tính chất mà đã được yêu cầu hay không. Các bài kiểm tra bao gồm:
+  \begin{itemize}
+    \item \textbf{Kiểm tra API, kiểm tra màn hình chức năng}: Kiểm tra xem các chức năng thương mại điện tử có hoạt động đúng như mong đợi không.
+    \item \textbf{Kiểm tra tính mở rộng}: Đặt các luồng dịch vụ dưới lượng tải biến thiên, quan sát trạng thái, hành vi của từng Deployment, HPA của từng microservice xem chúng có khả năng tự mở rộng hay không.
+    \item \textbf{Kiểm tra tính sẵn sàng}: Đặt các luồng dịch vụ dưới một số tình huống bất lợi (lượng tải cao và một số pod bị hủy), quan sát và kiểm tra xem chúng có thể duy trì khả năng cung cấp dịch vụ của mình hay không.
+  \end{itemize}
+\end{itemize}
 \section{Kiểm thử tính chất thành phần}
 \subsection{Thiết lập}
 \noindent Sử dụng minikube, ta tạo một cluster với driver là docker (chạy trên nền docker), bằng câu lệnh \lstinline|minikube start --driver=docker|. Sau đó, ta cần kích hoạt 2 add on cần thiết cho ingress và HPA bằng 2 câu lệnh sau:
