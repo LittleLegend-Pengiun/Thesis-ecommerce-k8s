@@ -1687,8 +1687,7 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 \end{figure}
 Đi tìm hiểu sâu hơn về các chỉ số các pod của Catalog microservice, ta nhận thấy rằng chỉ có một vài pod (được đánh dấu đỏ trên hình), là được sử dụng gần hết công suất, thông qua việc chỉ số CPU ultilization gần tối đa. 
 Đây là biểu hiện của việc lượng tải được phân bố không đều vào các pod, từ đó dẫn đến pod thì bị quá tải, pod thì chạy với rất ít tải. Nguyên nhân dẫn đến hành vi này là do môi trường giả lập Kubernetes cluster trên local không cung cấp được load balancer cho Kubernetes cluster, do đó việc chia tải từ Kubernetes service vào các pod diễn ra theo trình tự ngẫu nhiên, dẫn tới hiện tượng như miêu tả trên hình \ref{fig:pod-status-k6}.\\[0.5cm]
-\textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.
-
+\textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.\\[0.5cm]
 \noindent \textbf{Kiểm tra:} Đầu tiên, ta đổi môi trường triển khai ứng dụng từ minikube trên Windows sang minikube trên Linux. Ta sử dụng k6 để giả lập tình huồng khi dịch vụ nhận lượng request tăng cao. Với 1 pod bình thường của microservice \lstinline|catalog-ms|, ta thu được kết quả như hình \ref{fig:catalog-stress-test-no-hpa}.
 \begin{figure}[H]
   \begin{center}
