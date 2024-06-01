@@ -1539,10 +1539,10 @@ export default function () {
 Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
 
 \subsection{Triển khai mô hình Master - Slave Replication với Postgres Database}
-% \noindent Tham khảo từ bài viết: "Cấu hình PostgreSQL Master Slave Replication trên Kubernetes" của tác giả Quân Huỳnh.\footnote{Nguồn tham khảo: https://devopsvn.tech/kubernetes-practice/cau-hinh-postgresql-master-slave-replication-tren-kubernetes}\\[0.5cm]
+\noindent Tham khảo từ bài viết: "Cấu hình PostgreSQL Master Slave Replication trên Kubernetes" của tác giả Quân Huỳnh.\footnote{Nguồn tham khảo: https://devopsvn.tech/kubernetes-practice/cau-hinh-postgresql-master-slave-replication-tren-kubernetes}\\[0.5cm]
 % Viết theo bài viết ở link trên, đồng thời lồng config của PR-61 vào.
 \subsubsection{Bài toán đặt ra}
-\noindent Trong một ứng dụng thông thường ta chỉ sử dụng một database cho cả việc đọc và ghi, nếu ứng dụng có lượt truy cập không cao thì sử dụng một database cũng đủ đáp ứng yêu cầu cho người dùng. Nhưng đối với các ứng dụng mà có lượt truy cập cao thì chỉ sử dụng một database cho cả việc đọc và ghi sẽ dẫn tới database bị quá tải và ứng dụng không thể xử lý nổi tất cả các yêu cầu của người dùng.
+\noindent Để đáp ứng được tính đồng bộ dữ liệu giữa các database instance khi triển khai scaling, ta cần có một cơ chế giúp tự dộng đồng bộ hóa dữ liệu giữa các instance này.
 \subsubsection{Định nghĩa}
 \noindent Là một hệ thống Database bao gồm một Master Database và một hoặc nhiều Slave Replication Database. Với Master sử dụng cho việc ghi dữ liệu và các Replication được dùng cho việc đọc dữ liệu. Dữ liệu được ghi vào Master sẽ được chuyển qua các Replication để dữ liệu trên toàn bộ hệ thống database được đồng bộ với nhau.
 \begin{figure}[H]
@@ -1552,7 +1552,7 @@ Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn r
   \end{center}
 \end{figure}
 \subsubsection{Thiết lập cấu hình}
-\textbf{1. Tạo Master database}\\
+\textbf{1. Tạo Master database}\\[0.5cm]
 \noindent Đầu tiên, ta tạo một tệp tin tên là \textit{postgres-password-cm.yaml} để chứa thông tin password của PostgreSQL.
 \begin{lstlisting}[language=yaml]
 apiVersion: v1
@@ -1616,7 +1616,7 @@ spec:
           requests:
             storage: 2Gi
 
----
+  ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -1630,7 +1630,7 @@ spec:
     path: /var/lib/postgresql/data
   storageClassName: hostpath
 
----
+  ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -1638,7 +1638,7 @@ metadata:
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 
----
+  ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -1650,7 +1650,7 @@ spec:
   ports:
     - port: 5432
 \end{lstlisting}
-\noindent Để truyền hai tệp tin cấu hình trên vào database, ta sẽ sử dụng ConfigMaps dạng volumeMounts. Ta tiến hành tạo một thư mục tên là config và tạo thêm hai tệp tin tên là postgresql.conf và pg\_hba.conf bên trong thư mục đó.\\
+\noindent Để truyền hai tệp tin cấu hình trên vào database, ta sẽ sử dụng ConfigMaps dạng volumeMounts. Ta tiến hành tạo một thư mục tên là config và tạo thêm hai tệp tin tên là postgresql.conf và pg\_hba.conf bên trong thư mục đó.\\[0.5cm]
 \textit{File postgresql.conf} có nội dung như sau:
 \begin{lstlisting}[language=yaml]
 listen_addresses = '*'
@@ -1696,14 +1696,15 @@ host    replication     repuser         0.0.0.0/0               scram-sha-256
 host    all             all             all                     md5
 \end{lstlisting}
 \noindent Sau khi cấu hình, ta tiến hành tạo ConfigMaps bằng dòng lệnh sau:
-\begin{lstlisting}[language=yaml]
-kubectl create cm postgres-master-configmap --from-file=config
-\end{lstlisting}
+\begin{center}
+  \lstinline|kubectl create cm postgres-master-configmap --from-file=config|
+\end{center}
 \noindent Tạo StatefulSet bằng dòng lệnh:
-\begin{lstlisting}[language=yaml]
-kubectl apply -f postgres-master-sts.yaml
-\end{lstlisting}
-\textbf{3. Chuẩn bị dữ liệu cho slave database}\\
+\begin{center}
+  \lstinline|kubectl apply -f postgres-master-sts.yaml|
+\end{center}
+
+\textbf{3. Chuẩn bị dữ liệu cho slave database}\\[0.5cm]
 \noindent Để tạo được Slave DB PostgreSQL yêu cầu ta phải đồng bộ dữ liệu từ Master DB ra, sau đó khởi tạo các Slave DB với dữ liệu đồng bộ này. Ta tiến hành theo các bước sau:
 \begin{itemize}
     \item Tạo một PVC
@@ -1730,7 +1731,7 @@ spec:
     requests:
       storage: 2Gi
 
----
+  ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -1774,11 +1775,11 @@ spec:
             claimName: postgres-data-slave
 \end{lstlisting}
 \noindent Khởi tạo Job đồng bộ bằng câu lệnh sau:
-\begin{lstlisting}[language=yaml]
-kubectl apply -f sync-master-data.yaml
-\end{lstlisting}
+\begin{center}
+\lstinline|kubectl apply -f sync-master-data.yaml|
+\end{center}
 \noindent Kiểm tra kết quả
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[language=text]
 $ kubectl get pod
 NAME                     READY   STATUS      RESTARTS   AGE
 postgres-master-0        1/1     Running     0          89m
@@ -1797,9 +1798,9 @@ pg_basebackup: write-ahead log end point: 0/20000F8
 pg_basebackup: waiting for background process to finish streaming ...
 pg_basebackup: base backup completed
 \end{lstlisting}
-\noindent Như vậy, với kết quả trên, ta có thể thấy jobs đồng bộ dữ liệu đã được triển khai thành công. \\
-\textbf{4. Tạo slave database}\\
-\noindent Ta sẽ tiến hành tạo Slave DB. Đầu tiên ta sẽ tạo ConfigMaps để chứa cấu hình Slave DB, tạo thư mục tên là slave-config với hai tệp tin là postgresql.conf với recovery.conf.
+\noindent Như vậy, với kết quả trên, ta có thể thấy jobs đồng bộ dữ liệu đã được triển khai thành công. \\[0.5cm]
+\textbf{4. Tạo slave database}\\[0.5cm]
+\noindent Ta sẽ tiến hành tạo Slave DB. Đầu tiên ta sẽ tạo ConfigMaps để chứa cấu hình Slave DB, tạo thư mục tên là slave-config với hai tệp tin là postgresql.conf với recovery.conf.\\[0.5cm]
 \noindent Nội dung cấu hình của file \textit{postgresql.conf} như sau:
 \begin{lstlisting} [language=yaml]
 listen_addresses = '*'
@@ -1837,9 +1838,10 @@ primary_slot_name = 'replica_1_slot'
 trigger_file = '/var/lib/postgresql/data/change_to_master'
 \end{lstlisting}
 \noindent Tạo configmap bằng câu lệnh:
-\begin{lstlisting}[language=yaml]
-kubectl create cm postgres-slave-configmap --from-file=slave-config
-\end{lstlisting}
+\begin{center}
+  \lstinline|kubectl create cm postgres-slave-configmap--from-file=slave-config|
+\end{center}
+
 \noindent Tiếp theo ta tạo StatefulSet có sử dụng PVC chứa thông tin dữ liệu từ Master DB.
 \begin{lstlisting} [language=yaml]
 apiVersion: apps/v1
@@ -1894,20 +1896,21 @@ spec:
             claimName: postgres-data-slave
 \end{lstlisting}
 \noindent Tạo statefulset cho slave database bằng dòng lệnh:
-\begin{lstlisting} [language=yaml]
-kubectl apply -f postgres-slave-sts.yaml.
-\end{lstlisting}
+\begin{center}
+  \lstinline|kubectl apply -f postgres-slave-sts.yaml|
+\end{center}
+
 \noindent Kiểm tra slave database thì ta sẽ thấy nó có dòng hiển thị là slave database chỉ dùng để đọc, không thể ghi được.
-\begin{lstlisting} [language=yaml]
+\begin{lstlisting} [language=text]
 $ kubectl logs postgres-slave-0
 PostgreSQL Database directory appears to contain a database; Skipping initialization
 
 ...
-2021-12-10 08:57:29.790 UTC [1] LOG:  database system is ready to accept read only connections
+2024-05-10 08:57:29.790 UTC [1] LOG:  database system is ready to accept read only connections
 \end{lstlisting}
 \noindent Vậy là Slave DB của ta đã được tạo thành công, bước cuối là kiểm tra xem khi ta ghi dữ liệu vào Master DB thì Slave DB của ta có dữ liệu giống với Master hay không. Đầu tiên, truy cập vào Master DB.
 Sau đó tiến hành tạo bảng dữ liệu thử nghiệm và thêm dữ liệu vào bảng đó.
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[language=text]
 $ kubectl exec -it postgres-master-0 -- psql -h localhost -U postgres -d postgres
 psql (11.12 (Debian 11.12-1.pgdg90+1))
 Type "help" for help.
@@ -1920,7 +1923,7 @@ postgres=# INSERT INTO test VALUES (2, 'bar');
 INSERT 0 1
 \end{lstlisting}
 \noindent Sau đó, truy cập vào Slave DB và thực hiện truy vấn để kiểm tra xem dữ liệu có được hiển thị đúng như bên Master DB hay không.
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[language=text]
 $ kubectl exec -it postgres-slave-0 -- psql -h localhost -U postgres -d postgres
 psql (11.12 (Debian 11.12-1.pgdg90+1))
 Type "help" for help.
