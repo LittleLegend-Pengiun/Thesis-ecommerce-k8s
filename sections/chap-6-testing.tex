@@ -1537,6 +1537,405 @@ export default function () {
 }
 \end{lstlisting}
 Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
+\subsection{Triển khai mô hình Master - Slave Replication với Postgres Database}
+\noindent Tham khảo từ bài viết: "Cấu hình PostgreSQL Master Slave Replication trên Kubernetes" của tác giả Quân Huỳnh.\footnote{Nguồn tham khảo: https://devopsvn.tech/kubernetes-practice/cau-hinh-postgresql-master-slave-replication-tren-kubernetes}\\[0.5cm]
+% Viết theo bài viết ở link trên, đồng thời lồng config của PR-61 vào.
+\subsubsection{Bài toán đặt ra}
+\noindent Để đáp ứng được tính đồng bộ dữ liệu giữa các database instance khi triển khai scaling, ta cần có một cơ chế giúp tự dộng đồng bộ hóa dữ liệu giữa các instance này.
+\subsubsection{Định nghĩa}
+\noindent Là một hệ thống Database bao gồm một Master Database và một hoặc nhiều Slave Replication Database. Với Master sử dụng cho việc ghi dữ liệu và các Replication được dùng cho việc đọc dữ liệu. Dữ liệu được ghi vào Master sẽ được chuyển qua các Replication để dữ liệu trên toàn bộ hệ thống database được đồng bộ với nhau.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.22]{images/phat/master-slave-archi.jpg}
+    \caption{Mô hình kiến trúc master-slave database}
+  \end{center}
+\end{figure}
+\subsubsection{Thiết lập cấu hình}
+\textbf{1. Tạo Master database}\\[0.5cm]
+\noindent Đầu tiên, ta tạo một tệp tin tên là \textit{postgres-password-cm.yaml} để chứa thông tin password của PostgreSQL.
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-password
+data:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  TIMESCALEDB_TELEMETRY: "off"
+\end{lstlisting}
+\textbf{2. Tạo statefulset cho Master database}
+\begin{lstlisting}[language=yaml]
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-master
+  labels:
+    component: postgres-master
+spec:
+  selector:
+    matchLabels:
+      component: postgres-master
+  serviceName: postgres-master
+  template:
+    metadata:
+      labels:
+        component: postgres-master
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:11
+          command:
+            [
+              "sh",
+              "-c",
+              "docker-entrypoint.sh -c config_file=/var/config/postgresql.conf -c hba_file=/var/config/pg_hba.conf",
+            ]
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data-master
+            - mountPath: /var/config
+              name: postgres-master-configmap
+      volumes:
+        - name: postgres-master-configmap
+          configMap:
+            name: postgres-master-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data-master
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: hostpath
+        resources:
+          requests:
+            storage: 2Gi
+
+  ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-postgres-master
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/postgresql/data
+  storageClassName: hostpath
+
+  ---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+  ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-master
+spec:
+  selector:
+    component: postgres-master
+  type: ClusterIP
+  ports:
+    - port: 5432
+\end{lstlisting}
+\noindent Để truyền hai tệp tin cấu hình trên vào database, ta sẽ sử dụng ConfigMaps dạng volumeMounts. Ta tiến hành tạo một thư mục tên là config và tạo thêm hai tệp tin tên là postgresql.conf và pg\_hba.conf bên trong thư mục đó.\\[0.5cm]
+\textit{File postgresql.conf} có nội dung như sau:
+\begin{lstlisting}[language=yaml]
+listen_addresses = '*'
+max_connections = 100
+shared_buffers = 128MB
+dynamic_shared_memory_type = posix
+
+max_wal_size = 1GB
+min_wal_size = 80MB
+log_timezone = 'Etc/UTC'
+datestyle = 'iso, mdy'
+timezone = 'Etc/UTC'
+lc_messages = 'en_US.utf8'
+lc_monetary = 'en_US.utf8'
+lc_numeric = 'en_US.utf8'
+lc_time = 'en_US.utf8'
+default_text_search_config = 'pg_catalog.english'
+
+#------------------------------------------------------------------------------
+# CUSTOMIZED OPTIONS
+#------------------------------------------------------------------------------
+
+# Add settings for extensions here
+wal_level = replica
+max_wal_senders = 2
+max_replication_slots = 2
+synchronous_commit = off
+\end{lstlisting}
+\textit{File pg\_hba.conf} có nội dung như sau:
+\begin{lstlisting}[language=yaml]
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     trust
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            trust
+# IPv6 local connections:
+host    all             all             ::1/128                 trust
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     trust
+host    replication     all             127.0.0.1/32            trust
+host    replication     all             ::1/128                 trust
+host    replication     repuser         0.0.0.0/0               scram-sha-256
+host    all             all             all                     md5
+\end{lstlisting}
+\noindent Sau khi cấu hình, ta tiến hành tạo ConfigMaps bằng dòng lệnh sau:
+\begin{center}
+  \lstinline|kubectl create cm postgres-master-configmap --from-file=config|
+\end{center}
+\noindent Tạo StatefulSet bằng dòng lệnh:
+\begin{center}
+  \lstinline|kubectl apply -f postgres-master-sts.yaml|
+\end{center}
+
+\textbf{3. Chuẩn bị dữ liệu cho slave database}\\[0.5cm]
+\noindent Để tạo được Slave DB PostgreSQL yêu cầu ta phải đồng bộ dữ liệu từ Master DB ra, sau đó khởi tạo các Slave DB với dữ liệu đồng bộ này. Ta tiến hành theo các bước sau:
+\begin{itemize}
+    \item Tạo một PVC
+    \item Tạo Job để đồng bộ dữ liệu từ Master DB vào PVC
+    \item Tạo Slave DB với dữ liệu trong PVC
+\end{itemize}
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.5]{images/phat/master-slave-sync_data.jpg}
+    \caption{Kiến trúc master-slave database}
+  \end{center}
+\end{figure}
+\noindent Tạo một tệp tin tên là pvc-slave.yaml.
+\begin{lstlisting}[language=yaml]
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data-slave
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath
+  resources:
+    requests:
+      storage: 2Gi
+
+  ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-postgres-slave
+  labels:
+    pv: pv-postgres-slave
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/slave-postgresql/data
+  storageClassName: hostpath
+\end{lstlisting}
+\noindent Tiếp theo, tạo Job để chạy đồng bộ dữ liệu từ Master DB vào PVC trên, tạo tệp tin tên là sync-master-data.yaml.
+\begin{lstlisting}[language=yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-master-data
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: sync-master-data
+          image: postgres:11
+          command:
+            [
+              "sh",
+              "-c",
+              'PGPASSWORD="postgres" pg_basebackup -h postgres-master -D /var/lib/slave-postgresql/data -U repuser -vP',
+            ]
+          volumeMounts:
+            - mountPath: /var/lib/slave-postgresql/data
+              name: postgres-data
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data-slave
+\end{lstlisting}
+\noindent Khởi tạo Job đồng bộ bằng câu lệnh sau:
+\begin{center}
+\lstinline|kubectl apply -f sync-master-data.yaml|
+\end{center}
+\noindent Kiểm tra kết quả
+\begin{lstlisting}[language=text]
+$ kubectl get pod
+NAME                     READY   STATUS      RESTARTS   AGE
+postgres-master-0        1/1     Running     0          89m
+sync-master-data-59jhb   0/1     Completed   0          3s
+
+$ kubectl logs sync-master-data-59jhb
+pg_basebackup: initiating base backup, waiting for checkpoint to complete
+pg_basebackup: checkpoint completed
+pg_basebackup: write-ahead log start point: 0/2000028 on timeline 1
+pg_basebackup: starting background WAL receiver
+pg_basebackup: created temporary replication slot "pg_basebackup_143"
+    0/23770 kB (0%), 0/1 tablespace (...ave-postgresql/data/backup_label)
+23779/23779 kB (100%), 0/1 tablespace (...ostgresql/data/global/pg_control)
+23779/23779 kB (100%), 1/1 tablespace
+pg_basebackup: write-ahead log end point: 0/20000F8
+pg_basebackup: waiting for background process to finish streaming ...
+pg_basebackup: base backup completed
+\end{lstlisting}
+\noindent Như vậy, với kết quả trên, ta có thể thấy jobs đồng bộ dữ liệu đã được triển khai thành công. \\[0.5cm]
+\textbf{4. Tạo slave database}\\[0.5cm]
+\noindent Ta sẽ tiến hành tạo Slave DB. Đầu tiên ta sẽ tạo ConfigMaps để chứa cấu hình Slave DB, tạo thư mục tên là slave-config với hai tệp tin là postgresql.conf với recovery.conf.\\[0.5cm]
+\noindent Nội dung cấu hình của file \textit{postgresql.conf} như sau:
+\begin{lstlisting} [language=yaml]
+listen_addresses = '*'
+max_connections = 100
+shared_buffers = 128MB
+dynamic_shared_memory_type = posix
+
+max_wal_size = 1GB
+min_wal_size = 80MB
+log_timezone = 'Etc/UTC'
+datestyle = 'iso, mdy'
+timezone = 'Etc/UTC'
+lc_messages = 'en_US.utf8'
+lc_monetary = 'en_US.utf8'
+lc_numeric = 'en_US.utf8'
+lc_time = 'en_US.utf8'
+default_text_search_config = 'pg_catalog.english'
+
+#------------------------------------------------------------------------------
+# CUSTOMIZED OPTIONS
+#------------------------------------------------------------------------------
+
+# Add settings for extensions here
+hot_standby = on
+wal_level = replica
+max_wal_senders = 2
+max_replication_slots = 2
+synchronous_commit = off
+\end{lstlisting}
+\noindent Nội dung cấu hình của file \textit{recovery.conf} như sau:
+\begin{lstlisting} [language=yaml]
+standby_mode = on
+primary_conninfo = 'host=postgres-master port=5432 user=repuser password=postgres application_name=r1'
+primary_slot_name = 'replica_1_slot'
+trigger_file = '/var/lib/postgresql/data/change_to_master'
+\end{lstlisting}
+\noindent Tạo configmap bằng câu lệnh:
+\begin{center}
+  \lstinline|kubectl create cm postgres-slave-configmap--from-file=slave-config|
+\end{center}
+
+\noindent Tiếp theo ta tạo StatefulSet có sử dụng PVC chứa thông tin dữ liệu từ Master DB.
+\begin{lstlisting} [language=yaml]
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-slave
+  labels:
+    component: postgres-slave
+spec:
+  selector:
+    matchLabels:
+      component: postgres-slave
+  serviceName: postgres-slave
+  template:
+    metadata:
+      labels:
+        component: postgres-slave
+    spec:
+      initContainers:
+        - name: busybox
+          image: busybox
+          command:
+            - sh
+            - -c
+            - "cp /var/config/postgresql.conf /var/lib/postgresql/data/postgresql.conf && cp /var/config/recovery.conf /var/lib/postgresql/data/recovery.conf"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+            - mountPath: /var/config/postgresql.conf
+              subPath: postgresql.conf
+              name: postgres-slave-configmap
+            - mountPath: /var/config/recovery.conf
+              subPath: recovery.conf
+              name: postgres-slave-configmap
+      containers:
+        - name: postgres
+          image: postgres:11
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+      volumes:
+        - name: postgres-slave-configmap
+          configMap:
+            name: postgres-slave-configmap
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data-slave
+\end{lstlisting}
+\noindent Tạo statefulset cho slave database bằng dòng lệnh:
+\begin{center}
+  \lstinline|kubectl apply -f postgres-slave-sts.yaml|
+\end{center}
+
+\noindent Kiểm tra slave database thì ta sẽ thấy nó có dòng hiển thị là slave database chỉ dùng để đọc, không thể ghi được.
+\begin{lstlisting} [language=text]
+$ kubectl logs postgres-slave-0
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+...
+2024-05-10 08:57:29.790 UTC [1] LOG:  database system is ready to accept read only connections
+\end{lstlisting}
+\noindent Vậy là Slave DB của ta đã được tạo thành công, bước cuối là kiểm tra xem khi ta ghi dữ liệu vào Master DB thì Slave DB của ta có dữ liệu giống với Master hay không. Đầu tiên, truy cập vào Master DB.
+Sau đó tiến hành tạo bảng dữ liệu thử nghiệm và thêm dữ liệu vào bảng đó.
+\begin{lstlisting}[language=text]
+$ kubectl exec -it postgres-master-0 -- psql -h localhost -U postgres -d postgres
+psql (11.12 (Debian 11.12-1.pgdg90+1))
+Type "help" for help.
+
+postgres=# CREATE TABLE test (id int not null, val text not null);
+CREATE TABLE
+postgres=# INSERT INTO test VALUES (1, 'foo');
+INSERT 0 1
+postgres=# INSERT INTO test VALUES (2, 'bar');
+INSERT 0 1
+\end{lstlisting}
+\noindent Sau đó, truy cập vào Slave DB và thực hiện truy vấn để kiểm tra xem dữ liệu có được hiển thị đúng như bên Master DB hay không.
+\begin{lstlisting}[language=text]
+$ kubectl exec -it postgres-slave-0 -- psql -h localhost -U postgres -d postgres
+psql (11.12 (Debian 11.12-1.pgdg90+1))
+Type "help" for help.
+
+postgres=# SELECT * FROM test;
+ id | val
+----+-----
+  1 | foo
+  2 | bar
+(2 rows)
+\end{lstlisting}
+\noindent Như vậy, với kết quả quan sát, ta thấy được dữ liệu ở master DB và slave DB đã được đồng bộ thành công đúng với mô hình kiến trúc của master-slave database.
+
 \section{Thiết kế các bài kiểm tra, thí nghiệm}
 \noindent Ta có thể kiểm tra tính đúng đắn của việc áp dụng các dịch vụ Kubernetes để giải quyết vấn đề nêu ra, ở mặt vi mô và vĩ mô, thông qua 2 dạng bài kiểm tra: kiểm tra tính chất thành phần (component test) và kiếm tra hệ thống (system test).
 \begin{itemize}
