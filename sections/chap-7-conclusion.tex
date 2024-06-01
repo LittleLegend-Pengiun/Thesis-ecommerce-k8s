@@ -115,6 +115,7 @@ rộng tính năng mới.
 \begin{itemize}
     \item Đáp ứng được các yêu cầu cơ bản của một hệ thống thương mại điện tử.
     \item Giải quyết được bài toán về tính sẵn sàng cao và tính mở rộng cao.
+    \item Chứng minh được tính đúng đắn của giải pháp.
     \item Sử dụng Message Queue để giao tiếp giữa các microservices một cách hiệu quả, đặc biệt kết hợp với kiến trúc microservice giúp tăng tính decoupling và tính mở rộng (về tính năng) cho hệ thống sau này
     \item Sử dụng Websocket để gửi thông báo thời gian thực giữa server và client.
 \end{itemize}
@@ -122,13 +123,15 @@ rộng tính năng mới.
 \begin{itemize}
     \item Kiến trúc khá phức tạp, tốn nhiều thời gian, công sức để phát triển và triển khai.
     \item Chưa có luồng CI/CD để tự động hóa, hỗ trợ phát triển hệ thống.
-    \item Chức năng Autoscaling còn cần được tối ưu thêm.
+    \item Còn cần tối ưu thêm các dịch vụ đã được triển khai.
 \end{itemize}
 \section{Hướng phát triển đề tài trong tương lai}
 \noindent Trải qua quá trình nghiên cứu lý thuyết, tổng hợp đưa ra giải pháp và xây dựng phiên bản thử nghiệm, nhóm nhận thấy trong tương lai đề tài còn cần thực hiện thêm các công việc như:
 \begin{itemize}
-    \item Triển khai trên môi trường cloud để có đánh giá chính xác hơn.
+    \item Triển khai trên môi trường cloud để có đánh giá chính xác hơn về mặt thực tế.
+    \item Thực hiện thêm các thí nghiệm để chứng minh được tính hiệu quả cho giải pháp đưa ra.
     \item Xây dựng luồng CI/CD để tăng hiệu quả công việc.
+    \item Tối ưu thêm cấu hình, chức năng của hệ thống, ví dụ autoscaling.
+    \item Triển khai trên cluster thật.
     \item Xây dựng tính năng gợi ý sản phầm phù hợp với lich sử mua hàng của từng cá nhân.
-    \item Nghiên cứu để có thể tối ưu được quá trình autoscaling.
 \end{itemize}
