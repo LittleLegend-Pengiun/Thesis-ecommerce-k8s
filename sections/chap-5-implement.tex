@@ -277,7 +277,7 @@ Ngoài ra, để việc đóng góp của các thành viên được diễn ra m
     \end{center}
 \end{figure}
 \section{Điều chỉnh lại kiến trúc hệ thống khi hiện thực và triển khai}
-\noindent So sánh kiến trúc được hiện thực và triển khai (hình \ref{fig:architecture-deploy}) với kiến trúc thiết kế ban đầu (hình \ref{fig:system-architecture-design}), , nhóm đã điêu chỉnh và tinh giản bớt đi một số chi tiết do giới hạn về thời gian, bao gồm:
+\noindent So sánh kiến trúc được hiện thực và triển khai (hình \ref{fig:architecture-deploy}) với kiến trúc thiết kế ban đầu (hình \ref{fig:system-architecture-design}), nhóm đã điều chỉnh và tinh giản bớt đi một số chi tiết do giới hạn về thời gian, bao gồm:
 \begin{itemize}
     \item Loại bỏ các luồng dịch vụ shipping, payment, discount nhằm giảm bớt khối lượng công việc, nhưng vẫn giữ lại những dịch vụ cốt lõi quan trọng của hệ thống thương mại điện tử.
     \item Thay vì triển khai RabbitMQ cluster thì chỉ triển khai RabbitMQ statefullset, giảm được khối lượng công việc nhưng vẫn giúp RabbitMQ đảm bảo sự toàn vẹn dữ liệu.
