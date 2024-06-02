@@ -9,7 +9,7 @@
 %   \label{fig:architecture-deploy}
 
 % \end{figure}
-\subsection{Đóng gói các microservice thành các image}
+\subsection{Đóng gói các microservices thành các images}
 \noindent Sau khi có một ứng dụng hoàn chỉnh, ta đóng gói nó thành Docker image và đẩy lên Docker Hub. Cách đóng gói mỗi mircroservice sẽ được trình bày bên dưới.
 
 \subsubsection*{Frontend}
@@ -1456,7 +1456,7 @@ spec:
 
 \end{itemize}
 \subsubsection{Triển khai Keda runtime}
-\noindent Các ScaledObject của Keda không phải tự nhiên mà có thể vân hành tốt với Kubernetes cluster, mà cần có sư hỗ trợ của keda runtime để có thể vận hành các chức năng cần thiết. Đội ngũ phát triển của Keda đã cung cấp và gói gọn cho chúng ta toàn bộ các cấu hình cần thiết vào trong 1 file cấu hình yaml dài hơn 9700 dòng, mà từ đó ta có thể dễ dàng cài đặt thông qua câu lệnh sau: \lstinline|kubectl apply --server-side -f https://|\lstinline|github.com/kedacore/keda/releases/download/v2.12.1/keda-2.12.1-core.yaml|\\[0.2cm]
+\noindent Các ScaledObject của Keda không phải tự nhiên mà có thể vận hành tốt với Kubernetes cluster, mà cần có sư hỗ trợ của keda runtime để có thể vận hành các chức năng cần thiết. Đội ngũ phát triển của Keda đã cung cấp và gói gọn cho chúng ta toàn bộ các cấu hình cần thiết vào trong 1 file cấu hình yaml dài hơn 9700 dòng, mà từ đó ta có thể dễ dàng cài đặt thông qua câu lệnh sau: \lstinline|kubectl apply --server-side -f https://|\lstinline|github.com/kedacore/keda/releases/download/v2.12.1/keda-2.12.1-core.yaml|\\[0.2cm]
 Sau khi quá trình cài đặt hoàn tất, ta có thể kiểm tra các dịch vụ đã được cài vào trong cluster thông qua minikube dashboard, namespace \textbf{keda}.
 \begin{figure}[H]
   \begin{center}
@@ -1536,7 +1536,7 @@ export default function () {
   sleep(3);
 }
 \end{lstlisting}
-Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 12000 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
+Biến \lstinline|options| có tác dụng xác định bài kiểm tra diễn ra như thế nào. Bài kiểm tra sẽ gồm 5 chặng, mỗi chặng kéo dài lần lượt 1, 1, 2, 2, và 2 phút. Trong thời gian đó, mỗi giây k6 sẽ gửi tương ứng là 50, 500, 1000, 1200 và 10 request về dịch vụ đích, được xác định qua hàm mặc định ở bên dưới. Hàm khởi tạo mặc định này sẽ chứa các thông tin cần thiết về cách kiểm tra, như URL đích của dịch vụ, cũng như các đại lượng cần đo, ở đây là số request được phục vụ thành công, thông qua việc trả về response HTTP 200 OK.
 \subsection{Triển khai mô hình Master - Slave Replication với Postgres Database}
 \noindent Tham khảo từ bài viết: "Cấu hình PostgreSQL Master Slave Replication trên Kubernetes" của tác giả Quân Huỳnh.\footnote{Nguồn tham khảo: https://devopsvn.tech/kubernetes-practice/cau-hinh-postgresql-master-slave-replication-tren-kubernetes}
 % Viết theo bài viết ở link trên, đồng thời lồng config của PR-61 vào.
@@ -1986,7 +1986,7 @@ Ngay lập tức đã có thêm 2 pod mới được tạo ra như hình. Sau đ
 Như hình 5.4, ta thấy ngay lập tức có 2 pod bị xóa đi để đảm bảo số lượng pod trong cluster về đúng số lượng quy định.
 
 \subsubsection{Auto scaling}
-Tuy nhiên, trên thực tế, việc scale thủ công như trên sẽ gây tiêu tốn tài nguyên về cả nhân lực và vật lực kha khá, do cần phải có sự can thiệp trực tiếp của con người, và cũng cần con người giám sát 24/24 để đảm bảo có thể điều chỉnh lượng pod phù hợp với nhu cầu lúc đó. Do đó, tốt hơn hết là ta nên thiết lập để Kubernetes có thể thực hiện việc đó một cách tự động thay cho chúng ta, và đó là khi ta cần dùng tới HPA - Horizontal Pod Autoscaler.\\[0.5cm]
+Tuy nhiên, trên thực tế, việc scale thủ công như trên sẽ gây tiêu tốn tài nguyên về cả nhân lực và vật lực, do cần phải có sự can thiệp trực tiếp của con người, và cũng cần con người giám sát 24/24 để đảm bảo có thể điều chỉnh lượng pod phù hợp với nhu cầu lúc đó. Do đó, tốt hơn hết là ta nên thiết lập để Kubernetes có thể thực hiện việc đó một cách tự động thay cho chúng ta, và đó là khi ta cần dùng tới HPA - Horizontal Pod Autoscaler.\\[0.5cm]
 Bài kiểm tra bao gồm các bước sau:
 \begin{enumerate}
   \item Triển khai Deployment, Service, và HPA cho đối tượng muốn kiểm tra, ở đây là Catalog backend microservice.
@@ -2000,7 +2000,7 @@ Bài kiểm tra bao gồm các bước sau:
     \caption{Kết quả cuộc thử nghiệm}
   \end{center}
 \end{figure}
-\noindent \textbf{Mô tả thí nghiệm:} Trong hình 5.5, ta có thể thấy khi bắt đầu gọi API liên tục tới Catalog backend server, thì CPU load bắt đầu tăng mạnh. Khi CPU load vượt ngưỡng 10\% thì HPA sẽ được kích hoạt để tăng số pod trong deployment lên, nhằm mục đích làm giảm PCU load xuống. Tuy nhiên, một thời gian ngắn sau vì CPU load tiếp tục vượt ngưỡng nên HPA lại tiếp tục được kích hoạt tiếp để tăng thêm số pod ở deployment. Việc này chỉ dừng lại cho đến khi số pod đã đạt ngưỡng tối đa cho phép, hoặc CPU load ổn định không tiếp tục vượt ngưỡng nữa thì thôi.\\[0.5cm]
+\noindent \textbf{Mô tả thí nghiệm:} Trong hình 5.5, ta có thể thấy khi bắt đầu gọi API liên tục tới Catalog backend server, thì CPU load bắt đầu tăng mạnh. Khi CPU load vượt ngưỡng 10\% thì HPA sẽ được kích hoạt để tăng số pod trong deployment lên, nhằm mục đích làm giảm CPU load xuống. Tuy nhiên, một thời gian ngắn sau vì CPU load tiếp tục vượt ngưỡng nên HPA lại tiếp tục được kích hoạt tiếp để tăng thêm số pod ở deployment. Việc này chỉ dừng lại cho đến khi số pod đã đạt ngưỡng tối đa cho phép, hoặc CPU load ổn định không tiếp tục vượt ngưỡng nữa thì thôi.\\[0.5cm]
 Sau khi đã scale số pod lên đến mức tối đa là 10, ta terminate busybox đi để ngừng việc gửi request tới Catalog microservice. Lúc này CPU load giảm mạnh xuống còn 0\%. Sau một khoảng thời gian, HPA lại được kích hoạt để giảm số pod xuống. Khi giảm pod, nhận thấy CPU load vẫn tiếp tục dưới ngưỡng, HPA tiếp tục được kích hoạt để giảm tiếp số pod xuống, đến khi nào CPU load xấp xỉ với ngưỡng, hoặc khi đạt đến số pod tối thiểu, ở đây là 1 pod.
 
 \subsubsection{Auto scaling với custom metrics - ScaledObject}
@@ -2057,7 +2057,7 @@ Ta kiểm tra thử khả năng khôi phục lại dữ liệu của Statefulset
 \end{figure}
 
 \subsubsection{Kiểm tra tính sẵn sàng của dịch vụ khi có tải cao}
-\noindent Sau khi đã kiểm tra tính mở rộng, thì ta cần kiếm chứng tính hiệu quả mà autoscaling đem lại với khả năng chịu tải của dịch vụ.\\[0.5cm]
+\noindent Sau khi đã kiểm tra tính mở rộng, thì ta cần kiểm chứng tính hiệu quả mà autoscaling đem lại với khả năng chịu tải của dịch vụ.\\[0.5cm]
 Đầu tiên, ta tiến hành chạy bài kiểm tra bằng k6 khi dịch vụ chưa được cung cấp HPA, và kiểm tra xem dịch vụ có thể phục vụ được bao nhiêu trong tổng số request đã được gửi tới hệ thống. Ta được kết quả như hình dưới.
 \begin{figure}[H]
   \begin{center}
@@ -2076,7 +2076,7 @@ Sau đó, ta thử bài test với việc có ScaledObject, ta thu được kế
   \label{}
 \end{figure}
 Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có thể phục vụ đươc nhiều request hơn. Theo như hình trên, ta vẫn chỉ phục vụ được 32\% số request. Vậy nguyên nhân là do đâu?\\[0.5cm]
-Để tìm hiểu sâu thêm về vấn đề này, ta theo dõi hoạt động của các pod cho Catalog microservice khi bài kiểm tra đang diễn ra.
+Để tìm hiểu sâu hơn về vấn đề này, ta theo dõi hoạt động của các pod cho Catalog microservice khi bài kiểm tra đang diễn ra.
 \begin{figure}[H]
   \begin{center}
     \includegraphics[scale=0.44]{images/hanh/test-with-hpa-pod-resource-ultilization.png}
@@ -2087,7 +2087,7 @@ Trong trường hợp này, việc áp dụng HPA cũng không giúp ta có th�
 Đi tìm hiểu sâu hơn về các chỉ số các pod của Catalog microservice, ta nhận thấy rằng chỉ có một vài pod (được đánh dấu đỏ trên hình), là được sử dụng gần hết công suất, thông qua việc chỉ số CPU ultilization gần tối đa. 
 Đây là biểu hiện của việc lượng tải được phân bố không đều vào các pod, từ đó dẫn đến pod thì bị quá tải, pod thì chạy với rất ít tải. Nguyên nhân dẫn đến hành vi này là do môi trường giả lập Kubernetes cluster trên local không cung cấp được load balancer cho Kubernetes cluster, do đó việc chia tải từ Kubernetes service vào các pod diễn ra theo trình tự ngẫu nhiên, dẫn tới hiện tượng như miêu tả trên hình \ref{fig:pod-status-k6}.\\[0.5cm]
 \textbf{Biện pháp đề xuất:} Hiện thực cluster trên một môi trường khác có thể cung cấp được load balancer cho Kubernetes service, ví dụ như môi trường cloud.\\[0.5cm]
-\noindent \textbf{Kiểm tra:} Đầu tiên, ta đổi môi trường triển khai ứng dụng từ minikube trên Windows sang minikube trên Linux. Ta sử dụng k6 để giả lập tình huồng khi dịch vụ nhận lượng request tăng cao. Với 1 pod bình thường của microservice \lstinline|catalog-ms|, ta thu được kết quả như hình \ref{fig:catalog-stress-test-no-hpa}.
+\noindent \textbf{Kiểm tra:} Đầu tiên, ta đổi môi trường triển khai ứng dụng từ minikube trên Windows sang minikube trên Linux. Ta sử dụng k6 để giả lập tình huống khi dịch vụ nhận lượng request tăng cao. Với 1 pod bình thường của microservice \lstinline|catalog-ms|, ta thu được kết quả như hình \ref{fig:catalog-stress-test-no-hpa}.
 \begin{figure}[H]
   \begin{center}
     \includegraphics[scale=0.15]{images/hanh/component-catalog-no-hpa}
