@@ -4,7 +4,7 @@
 \subsection{Định nghĩa}
 \noindent Theo Google Cloud Platform\footnote{Dựa theo link: https://cloud.google.com/kubernetes-engine/docs/concepts/custom-and-external-metrics}, một \textit{custom metric} sẽ được truyền từ ứng dụng của bạn mà đang chạy trên Kubernetes.
 \subsection{Đặt vấn đề}
-\noindent Việc scale theo CPU và memory không hiệu quả với rest api.\\
+\noindent Việc scale theo CPU và memory không hiệu quả với Rest API.\\[0.5cm]
 \noindent Mặc dù các số liệu mặc định do Kubernetes cung cấp, chẳng hạn như mức sử dụng CPU và bộ nhớ dựa trên yêu cầu tài nguyên, rất hữu ích trong nhiều tình huống nhưng chúng có thể không đủ cho tất cả các ứng dụng. Mở rộng quy mô dựa trên giới hạn tài nguyên đảm bảo rằng ứng dụng của chúng ta có thể xử lý các khối lượng công việc khác nhau mà không đạt đến mức tài nguyên tối đa được phép. Số liệu tùy chỉnh cho phép chúng ta điều chỉnh hành vi mở rộng quy mô của HPA dựa trên nhu cầu cụ thể của ứng dụng, cho phép tự động điều chỉnh quy mô chính xác và hiệu quả hơn.
 \subsection{Cơ sở lý thuyết}
 \textit{Nội dung tiểu mục được tham khảo từ chung một nguồn}\footnote{https://learnk8s.io/autoscaling-apps-kubernetes}\\[0.5cm]
@@ -230,16 +230,13 @@ dùng.
 \end{figure}
 \subsubsection{Ưu điểm của Reactjs}
 \begin{itemize}
-    \item \textbf{Tận dụng lại các thành phần có sẵn}
-
+    \item \textbf{Tận dụng lại các thành phần có sẵn}\\
     \indent ReactJS hỗ trợ tích cực trong khởi tạo một website bởi lập trình viên sẽ không cần phải code nhiều như khi tạo trang web mà chỉ sử dụng JavaScript. Đồng thời, nó cung cấp một loạt các thành phần sẵn có mà bạn có thể sử dụng trong nhiều tình huống khác nhau.
-    \item \textbf{Tích hợp được cho cả ứng dụng di động Mobile application}
-
+    \item \textbf{Tích hợp được cho cả ứng dụng di động Mobile application}\\
     \indent Hầu hết chúng ta đã biết rằng ReactJS được sử dụng để phát triển các ứng dụng web, tuy nhiên, nó không chỉ giới hạn trong lĩnh vực đó. Nếu chúng ta muốn phát triển các ứng dụng di động, chúng ta có thể sử dụng React Native. Đây là một framework do Facebook phát triển, cho phép chúng ta dễ dàng "chia sẻ" các thành phần và tái sử dụng logic nghiệp vụ trong các ứng dụng của chúng ta.
     \item \textbf{Tối ưu để tăng cường khả năng tìm kiếm SEO}
-
     \indent Tối ưu hóa công cụ tìm kiếm (SEO) là một yếu tố quan trọng để đảm bảo trang web của chúng ta xuất hiện cao hơn trong kết quả tìm kiếm của Google. ReactJS là một thư viện JavaScript cơ bản. Công cụ tìm kiếm của Google có khả năng thu thập thông tin và lập chỉ mục mã JavaScript, tuy nhiên, nó cũng yêu cầu sự hỗ trợ từ các thư viện khác để làm điều này.
-    \item \textbf{Dễ dàng sửa lỗi và gỡ rối Debug}
+    \item \textbf{Dễ dàng sửa lỗi và gỡ rối (Debugging)}
 
     \indent Facebook đã phát hành một tiện ích mở rộng Chrome để hỗ trợ việc gỡ lỗi trong quá trình phát triển ứng dụng. Điều này giúp tăng tốc quá trình phát hành sản phẩm cũng như quá trình viết mã của chúng ta.
 \end{itemize}
@@ -247,7 +244,6 @@ dùng.
 \begin{itemize}
     \item Reactjs không phải là framework, cho nên chúng ta phải tự xây dựng dự án bằng thủ công.
     \item Tích hợp Reactjs vào các framework MVC truyền thống yêu cầu cần phải cấu hình lại.
-    \item Poor Document: Đó là một nhược điểm khá phổ biến đối với các công nghệ cập nhật liên tục. Các công nghệ cập nhật và tăng tốc nhanh đến mức không có thời gian để tạo tài liệu phù hợp.
 \end{itemize}
 \subsection{Redux}
 \subsubsection{Khái niệm}
@@ -261,37 +257,17 @@ dùng.
 
 \subsubsection{Ưu điểm}
 \begin{itemize}
-  \item \textbf{Dễ dàng quản lý trạng thái:} Redux giúp quản lý trạng thái ứng dụng một cách hiệu quả và dễ dàng, giúp giảm thiểu sự phức tạp và tăng tính dễ bảo trì của ứng dụng.
-  mới.
+  \item \textbf{Dễ dàng quản lý trạng thái:} Redux giúp quản lý trạng thái ứng dụng một cách hiệu quả và dễ dàng, giúp giảm thiểu sự phức tạp và tăng tính dễ bảo trì của ứng dụng mới.
   \item \textbf{Dễ dàng theo dõi và gỡ lỗi:} Redux giúp theo dõi và gỡ lỗi trạng thái ứng dụng một cách dễ dàng, giúp tăng hiệu suất và giảm thời gian gỡ lỗi.
   \item \textbf{Tích hợp tốt với các framework và thư viện khác:} Redux tích hợp tốt với các framework và thư viện phổ biến khác như React, Angular, Vue, và Node.js, giúp tạo ra các ứng dụng mạnh mẽ và linh hoạt.  
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
   \item \textbf{Cấu hình phức tạp:} Redux yêu cầu cấu hình và quản lý trạng thái ứng dụng một cách cẩn thận, đòi hỏi kiến thức về quản lý trạng thái và hệ thống phân tán.
-  \item \textbf{Yêu cầu kiến thức về JavaScript:} Redux yêu cầu kiến thức vững về JavaScript và các khái niệm về trạng thái ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về JavaScript:} Redux yêu cầu kiến thức vững về JavaScript và các khái niệm về trạng thái ứng dụng, điều này có thể làm tăng độ dốc của quá trình học học đối với người mới sử dụng.
   \item \textbf{Yêu cầu thời gian và công sức:} Redux đòi hỏi thời gian và công sức để cấu hình và quản lý trạng thái ứng dụng, đặc biệt là trong các ứng dụng lớn và phức tạp.
 \end{itemize}
-\subsection{Material-UI}
-\subsubsection{Khái niệm}
-\noindent Material-UI là một thư viện UI mã nguồn mở dựa trên nguyên tắc thiết kế của Google Material Design. Material-UI cung cấp các thành phần UI đẹp và linh hoạt, giúp tạo ra giao diện người dùng hiện đại và chuyên nghiệp.\footnote{https://material-ui.com/}
-\begin{figure}[H]
-  \begin{center}
-    \includegraphics[scale=0.3]{images/hieu/phuluc/material-ui.png}
-    \caption{Material-UI}
-  \end{center}
-\end{figure}
-\subsubsection{Ưu điểm}
-\begin{itemize}
-  \item \textbf{Thiết kế đẹp và chuyên nghiệp:} Material-UI cung cấp các thành phần UI đẹp và chuyên nghiệp dựa trên nguyên tắc thiết kế của Google Material Design, giúp tạo ra giao diện người dùng hiện đại và chuyên nghiệp.
-  \item \textbf{Linh hoạt và dễ sử dụng:} Material-UI cung cấp các thành phần UI linh hoạt và dễ sử dụng, giúp tạo ra giao diện người dùng một cách nhanh chóng và hiệu quả.
-  \item \textbf{Tích hợp tốt với React:} Material-UI tích hợp tốt với React, giúp tạo ra các ứng dụng React mạnh mẽ và linh hoạt.
-\end{itemize}
-\subsubsection{Nhược điểm}
-\begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về React:} Material-UI yêu cầu kiến thức về React để sử dụng và tùy chỉnh các thành phần UI, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
-  \item \textbf{Giới hạn về tùy chỉnh:} Material-UI có thể có giới hạn về tùy chỉnh và mở rộng các thành phần UI so với các thư viện UI khác.
-\end{itemize}
+
 \subsection{Thư viện Antd}
 \subsubsection{Khái niệm}
 \noindent Ant Design (viết tắt là Antd) là một thư viện UI mã nguồn mở dựa trên nguyên tắc thiết kế của Ant Design, một công ty công nghệ Trung Quốc. Antd cung cấp các thành phần UI đẹp và linh hoạt, giúp tạo ra giao diện người dùng hiện đại và chuyên nghiệp.\footnote{https://ant.design/}
@@ -309,7 +285,7 @@ dùng.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về React:} Antd yêu cầu kiến thức về React để sử dụng và tùy chỉnh các thành phần UI, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về React:} Antd yêu cầu kiến thức về React để sử dụng và tùy chỉnh các thành phần UI, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Antd có thể có giới hạn về tùy chỉnh và mở rộng các thành phần UI so với các thư viện UI khác.
 \end{itemize}
 \subsection{Axios}
@@ -329,7 +305,7 @@ dùng.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về JavaScript:} Axios yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các yêu cầu HTTP, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về JavaScript:} Axios yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các yêu cầu HTTP, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Axios có thể có giới hạn về tùy chỉnh và mở rộng các yêu cầu HTTP so với các thư viện khác.
 \end{itemize}
 \subsection{React Router}
@@ -349,7 +325,7 @@ dùng.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về React:} React Router yêu cầu kiến thức về React để sử dụng và tùy chỉnh các định tuyến, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về React:} React Router yêu cầu kiến thức về React để sử dụng và tùy chỉnh các định tuyến, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} React Router có thể có giới hạn về tùy chỉnh và mở rộng các định tuyến so với các thư viện khác.
 \end{itemize}
 \subsection{Vite}
@@ -369,7 +345,7 @@ dùng.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về JavaScript:} Vite yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các ứng dụng web, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về JavaScript:} Vite yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các ứng dụng web, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Vite có thể có giới hạn về tùy chỉnh và mở rộng các ứng dụng web so với các công cụ khác.
 \end{itemize}
 \subsection{Nginx}
@@ -389,7 +365,7 @@ dùng.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về Linux:} Nginx yêu cầu kiến thức về Linux để cấu hình và quản lý máy chủ web, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về Linux:} Nginx yêu cầu kiến thức về Linux để cấu hình và quản lý máy chủ web, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Nginx có thể có giới hạn về tùy chỉnh và mở rộng máy chủ web so với các công cụ khác.
 \end{itemize}
 \subsection{Styled-components}
@@ -409,7 +385,7 @@ dùng.
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về React:} Styled-components yêu cầu kiến thức về React để sử dụng và tùy chỉnh các kiểu CSS, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về React:} Styled-components yêu cầu kiến thức về React để sử dụng và tùy chỉnh các kiểu CSS, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Styled-components có thể có giới hạn về tùy chỉnh và mở rộng các kiểu CSS so với các thư viện khác.
 \end{itemize}
 \section{Lập trình Back-end}
@@ -420,22 +396,22 @@ tảng như:
   \item \textbf{Ngôn ngữ lập trình server-side và framework đi kèm:} \\[0.2cm]
   Cần phải vững kiến thức về những ngôn ngữ lập trình như Java, Python, Ruby, PHP, Golang,
   Javascript (Node.js)... Đây là những ngôn ngữ hỗ trợ lập trình phía server, giúp viết các chương
-  trình, câu lệnh cho để vận hành ứng dụng, phần mềm, website...\\[0.5cm]
+  trình, câu lệnh cho để vận hành ứng dụng, phần mềm, website...\\[0.2cm]
   Ngoài ra, ta cần biết về framework phổ biến đi kèm với mỗi ngôn ngữ để làm việc hiệu quả hơn. Ví
 dụ như Java có framework Spring, PHP có Laravel, còn Ruby sẽ là Ruby On Rails...
   \item \textbf{Hệ quản trị cơ sở dữ liệu:}\\[0.2cm]
   Ta cần phải có khả năng quản trị cơ sở dữ liệu theo hệ thống một cách nhanh chóng và quy củ. Để
   làm được điều này, cần nắm rõ cách tổ chức của cơ sở dữ liệu, cấu trúc của cơ sở dữ liệu và các hệ
-  thống database như MySQL, Postgres, MongoDB...\\[0.5cm]
+  thống database như MySQL, Postgres, MongoDB...\\[0.2cm]
   Có hai loại cơ sở dữ liệu là SQL và NoSQL. Cơ sở dữ liệu SQL là cơ sở dữ liệu trong đó dữ liệu
 được ánh xạ trong bảng và mỗi cơ sở dữ liệu được liên kết với nhau theo một cách quan trọng, nó
 hoạt động trên các truy vấn và tạo ra kết quả dựa trên chúng. Còn đối với NoSQL, nó không giống
 như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản nó hoạt động trên JSON hoặc XML.
   \item \textbf{Kiến thức cơ bản về server (máy chủ):}\\[0.2cm]
   Vì kết quả của việc lập trình back-end sẽ được thực thi trên server nên việc tìm hiểu về server là
-  rất cần thiết. Ta cần phải hệ điều hành Linux, một hệ điều hành mã nguồn mở rất nổi tiếng cho
+  rất cần thiết. Ta cần phải tìm hiểu về Linux, một hệ điều hành mã nguồn mở rất nổi tiếng cho
   các máy chủ ngày nay. Bên cạnh đó là kỹ năng để có thể cài đặt các ứng dụng trên server và deploy
-  service cũng như các kiến thức về mạng máy tính.\\[0.5cm]
+  service cũng như các kiến thức về mạng máy tính.\\[0.2cm]
   Một số ví dụ về máy chủ là máy chủ Apache, Nginx, IIS và Microsoft IIS.
   \item \textbf{Kiến thức về API:}\\[0.2cm]
   API là viết tắt của Application Programming Interface, là một phương tiện thông qua đó hai phần
@@ -462,7 +438,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức vững về Java:} Java yêu cầu kiến thức vững về ngôn ngữ lập trình Java để phát triển ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức vững về Java:} Java yêu cầu kiến thức vững về ngôn ngữ lập trình Java để phát triển ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Cấu hình phức tạp:} Java yêu cầu cấu hình và quản lý ứng dụng một cách cẩn thận, đòi hỏi kiến thức về hệ thống phân tán.
   \item \textbf{Hiệu suất có thể bị ảnh hưởng đối với tải công việc rất cao:} Java có thể gặp vấn đề về hiệu suất đối với tải công việc rất cao, đòi hỏi tối ưu hóa và tinh chỉnh để đạt hiệu suất tốt nhất.
 \end{itemize}
@@ -483,7 +459,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về Java:} Spring Boot yêu cầu kiến thức về Java để sử dụng và tùy chỉnh các ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về Java:} Spring Boot yêu cầu kiến thức về Java để sử dụng và tùy chỉnh các ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Spring Boot có thể có giới hạn về tùy chỉnh và mở rộng các ứng dụng so với các framework khác.
 \end{itemize}
 \subsection{Golang}
@@ -505,7 +481,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức vững về Golang:} Golang yêu cầu kiến thức vững về ngôn ngữ lập trình Golang để phát triển ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức vững về Golang:} Golang yêu cầu kiến thức vững về ngôn ngữ lập trình Golang để phát triển ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Cấu hình phức tạp:} Golang yêu cầu cấu hình và quản lý ứng dụng một cách cẩn thận, đòi hỏi kiến thức về hệ thống phân tán.
   \item \textbf{Hiệu suất có thể bị ảnh hưởng đối với tải công việc rất cao:} Golang có thể gặp vấn đề về hiệu suất đối với tải công việc rất cao, đòi hỏi tối ưu hóa và tinh chỉnh để đạt hiệu suất tốt nhất.
 \end{itemize}
@@ -527,7 +503,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về Golang:} Fiber yêu cầu kiến thức về Golang để sử dụng và tùy chỉnh các ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về Golang:} Fiber yêu cầu kiến thức về Golang để sử dụng và tùy chỉnh các ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Fiber có thể có giới hạn về tùy chỉnh và mở rộng các ứng dụng so với các framework khác.
 \end{itemize}
 \subsection{NodeJS}
@@ -549,7 +525,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về JavaScript:} Node.js yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về JavaScript:} Node.js yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Cấu hình phức tạp:} Node.js yêu cầu cấu hình và quản lý ứng dụng một cách cẩn thận, đòi hỏi kiến thức về hệ thống phân tán.
   \item \textbf{Hiệu suất có thể bị ảnh hưởng đối với tải công việc rất cao:} Node.js có thể gặp vấn đề về hiệu suất đối với tải công việc rất cao, đòi hỏi tối ưu hóa và tinh chỉnh để đạt hiệu suất tốt nhất.
 \end{itemize}
@@ -570,7 +546,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về JavaScript:} Socket.IO yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các kết nối thời gian thực, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về JavaScript:} Socket.IO yêu cầu kiến thức về JavaScript để sử dụng và tùy chỉnh các kết nối thời gian thực, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Giới hạn về tùy chỉnh:} Socket.IO có thể có giới hạn về tùy chỉnh và mở rộng các kết nối thời gian thực so với các thư viện khác.
 \end{itemize}
 \subsection{PostgreSQL}
@@ -592,7 +568,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về SQL:} PostgreSQL yêu cầu kiến thức về SQL để sử dụng và quản lý cơ sở dữ liệu, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về SQL:} PostgreSQL yêu cầu kiến thức về SQL để sử dụng và quản lý cơ sở dữ liệu, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Cấu hình phức tạp:} PostgreSQL yêu cầu cấu hình và quản lý cơ sở dữ liệu một cách cẩn thận, đòi hỏi kiến thức về hệ thống phân tán.
   \item \textbf{Hiệu suất có thể bị ảnh hưởng đối với tải công việc rất cao:} PostgreSQL có thể gặp vấn đề về hiệu suất đối với tải công việc rất cao, đòi hỏi tối ưu hóa và tinh chỉnh để đạt hiệu suất tốt nhất.
 \end{itemize}
@@ -615,7 +591,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức về Linux:} Docker yêu cầu kiến thức về Linux để triển khai và quản lý ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về Linux:} Docker yêu cầu kiến thức về Linux để triển khai và quản lý ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Cấu hình phức tạp:} Docker yêu cầu cấu hình và quản lý ứng dụng một cách cẩn thận, đòi hỏi kiến thức về hệ thống phân tán.
   \item \textbf{Hiệu suất có thể bị ảnh hưởng đối với tải công việc rất cao:} Docker có thể gặp vấn đề về hiệu suất đối với tải công việc rất cao, đòi hỏi tối ưu hóa và tinh chỉnh để đạt hiệu suất tốt nhất.
 \end{itemize}
@@ -664,7 +640,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-  \item \textbf{Yêu cầu kiến thức vững về Linux:} Kubernetes yêu cầu kiến thức vững về Linux để triển khai và quản lý ứng dụng, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức vững về Linux:} Kubernetes yêu cầu kiến thức vững về Linux để triển khai và quản lý ứng dụng, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
   \item \textbf{Phức tạp trong triển khai ban đầu:} Kubernetes yêu cầu một khối lượng kiến thức lớn và thời gian đầu tư lớn để triển khai và quản lý hiệu quả. Việc cấu hình và triển khai một cluster Kubernetes có thể khó khăn đối với những người mới bắt đầu.
   \item \textbf{Yêu cầu tài nguyên cao:} Kubernetes cần một tài nguyên phần cứng và mạng đáng kể để hoạt động hiệu quả. Điều này có thể là một thách thức đối với các tổ chức có ngân sách hạn chế hoặc không có sẵn cơ sở hạ tầng mạng và lưu trữ phù hợp.
 \end{itemize}
@@ -689,7 +665,7 @@ như SQL, không cần phải cấu trúc dữ liệu trước, về cơ bản n
 \begin{itemize}
   \item \textbf{Giới hạn về quy mô:} Minikube có giới hạn về quy mô của cluster Kubernetes mà bạn có thể tạo ra, điều này có thể gây khó khăn đối với việc thử nghiệm và phát triển ứng dụng có quy mô lớn.
   \item \textbf{Yêu cầu tài nguyên hệ thống:} Minikube cần một số tài nguyên hệ thống đáng kể để hoạt động hiệu quả, điều này có thể là một thách thức đối với các máy tính cá nhân có cấu hình yếu hoặc không đáp ứng được yêu cầu tài nguyên.
-  \item \textbf{Yêu cầu kiến thức về Kubernetes:} Minikube yêu cầu kiến thức về Kubernetes để triển khai và quản lý cluster, điều này có thể làm tăng độ dốc học đối với người mới sử dụng.
+  \item \textbf{Yêu cầu kiến thức về Kubernetes:} Minikube yêu cầu kiến thức về Kubernetes để triển khai và quản lý cluster, điều này có thể làm tăng độ dốc của quá trình học đối với người mới sử dụng.
 \end{itemize}
 \subsection{RabbitMQ}
 \subsubsection{Khái niệm}

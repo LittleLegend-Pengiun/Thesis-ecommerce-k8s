@@ -8,11 +8,11 @@ Cùng với ReactJS, nhóm cũng sử dụng thêm các library/framework/tool �
     web. Thay vì tải lại toàn bộ trang web khi người dùng thực hiện các thao tác điều hướng, React
     Router cho phép ứng dụng thay đổi nội dung trên cùng một trang một cách nhanh chóng và mượt
     mà, giúp tăng trải nghiệm người dùng.
-    \item \textbf{Redux}: Redux là một thư viện quản lý trạng thái (state management) cho ứng dụng JavaScript, thường được sử dụng trong các ứng dụng React. Nó giúp quản lý trạng thái của ứng dụng một cách hiệu quả và dễ dàng theo dõi.
+    \item \textbf{Redux}: Redux là một thư viện quản lý trạng thái (state management) cho ứng dụng JavaScript, thường được sử dụng trong các ứng dụng React. Nó giúp quản lý trạng thái của ứng dụng một cách hiệu quả và dễ dàng.
     \item \textbf{Reduc Toolkit}: Redux Toolkit là một bộ công cụ (toolkit) được thiết kế để giảm bớt sự phức tạp khi sử dụng Redux và cung cấp các tiện ích hữu ích để viết code một cách nhanh chóng và hiệu quả hơn. 
     \item \textbf{React Persist}: Redux Persist là một thư viện cho phép lưu trữ trạng thái của ứng dụng Redux vào bộ nhớ cục bộ của trình duyệt, giúp duy trì trạng thái khi người dùng tải lại trang hoặc đóng/mở trình duyệt.
     \item \textbf{Axios}: Là một thư viện HTTP client dựa trên Promise dùng để thực hiện các yêu cầu HTTP từ trình duyệt và Node.js. Axios giúp đơn giản hóa việc giao tiếp với server, hỗ trợ các phương thức HTTP như GET, POST, PUT, DELETE và xử lý dữ liệu trả về dễ dàng.
-    \item \textbf{Thư viện Antd}: Là một thư viện UI component dành cho React, cung cấp một loạt các thành phần giao diện người dùng phong phú và đa dạng theo phong cách Ant Design. Thư viện này giúp tăng tốc quá trình phát triển giao diện người dùng với thiết kế nhất quán và đẹp mắt.
+    \item \textbf{Thư viện Antd}: Là một thư viện UI component dành cho React, cung cấp một loạt các UI component phong phú và đa dạng theo phong cách Ant Design. Thư viện này giúp tăng tốc quá trình phát triển giao diện người dùng với thiết kế nhất quán và đẹp mắt.
     \item \textbf{Styled-components}: Là một thư viện cho phép viết CSS trực tiếp trong JavaScript bằng cách sử dụng tagged template literals. Styled-components giúp tạo các component với styles riêng biệt, dễ duy trì và tái sử dụng, đồng thời hỗ trợ tính năng theming và tạo CSS động.
     \item \textbf{SASS}: Là một tiền xử lý CSS giúp viết mã CSS dễ dàng hơn và mạnh mẽ hơn bằng cách cung cấp các tính năng như biến, lồng ghép (nesting), mixin, và thừa kế (inheritance). SASS giúp viết mã CSS có cấu trúc rõ ràng và dễ duy trì hơn.
     \item \textbf{Vite}: Là một công cụ build và phát triển nhanh chóng dành cho các dự án web hiện đại, đặc biệt là các ứng dụng sử dụng JavaScript và TypeScript. Vite cung cấp khả năng hot module replacement (HMR), giúp phát triển nhanh hơn và tối ưu hóa thời gian build sản phẩm cuối cùng.
@@ -27,7 +27,6 @@ Cùng với ReactJS, nhóm cũng sử dụng thêm các library/framework/tool �
 
 \subsubsection{Golang Fiber}
 \noindent Golang (Go) là một ngôn ngữ lập trình mã nguồn mở được phát triển bởi Google, được thiết kế để đơn giản, hiệu quả và dễ sử dụng. Nó có cú pháp rõ ràng, hiệu suất cao, hỗ trợ quản lý đồng thời và garbage collection tự động. Go hỗ trợ đa nền tảng và có một hệ sinh thái phong phú với thư viện tiêu chuẩn và cộng đồng phát triển mạnh mẽ.\\[0.5cm]
-
 \noindent Fiber là một framework web được viết bằng ngôn ngữ lập trình Go (Golang), lấy cảm hứng từ ExpressJS của NodeJS, với mục tiêu cung cấp một framework nhẹ, nhanh và thân thiện với lập trình viên.
 \subsubsection{NodeJS kết hợp ExpressJS} 
 \noindent Node.js là một nền tảng phát triển ứng dụng web mã nguồn mở, được xây dựng trên JavaScript Engine của Chrome (V8 Engine). Node.js cho phép viết mã JavaScript ở phía server, giúp xây dựng các ứng dụng web hiệu quả và mạnh mẽ. \\[0.5cm]
@@ -133,11 +132,11 @@ Ngoài ra, để việc đóng góp của các thành viên được diễn ra m
 \noindent Giao diện trang chủ gồm các thành phần:
 \begin{itemize}
     \item Header: Hiển thị logo, tên cửa hàng, nút đăng nhập, giỏ hàng, nút xem thông báo.
-    \item Sidebar: Hiển thị danh mục các sản phẩm
-    \item Danh sách giảm giá nổi bật
+    \item Sidebar: Hiển thị danh mục các sản phẩm.
+    \item Danh sách giảm giá nổi bật.
     \item Danh sách tất cả sản phẩm dưới dạng phân trang, thông tin sản phẩm như tên, số lượng trong kho, giá, đánh giá.
-    \item Thanh tìm kiếm sản phẩm
-    \item Lọc sản phẩm theo khoảng giá
+    \item Thanh tìm kiếm sản phẩm.
+    \item Lọc sản phẩm theo khoảng giá.
     \item Footer: Hiển thị thông tin liên hệ, thông tin cửa hàng.
     \item Modal: Hiển thị thông tin chi tiết sản phẩm khi người dùng click vào sản phẩm.
 \end{itemize}
