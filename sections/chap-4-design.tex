@@ -61,9 +61,10 @@
     \begin{center}
     \includegraphics[scale = 0.13]{images/phat/Release-architecture-v2}
     \vspace*{7mm}
-    \caption{Kiến trúc hệ thống}
     \end{center}
-    \label{}
+
+    \caption{Kiến trúc hệ thống}
+    \label{fig:system-architecture-design}
 \end{figure}
 \noindent Hệ thống bao gồm 02 cluster: 01 cluster chính để chứa tất cả các service của hệ thống, cluster còn lại dùng để chứa RabbitMQ. Các service bên trong cluster chính được chia thành 03 nhóm chính: fontend, backend, database. Các service frontend và backend có thể được truy cập từ bên ngoài thông qua Nginx ingress (reverse proxy, load balancer). Service backend được kết nối tới ingress vì frontend sử dụng client side rendering, các lệnh js được chạy ở browser trên máy của client, do đó cần endpoint để truy cập vào các API backend microservices. Các service ở nhóm backend và nhóm database giao tiếp với nhau thông qua rabbitMQ.
 \begin{figure}[H]
@@ -84,7 +85,7 @@
     \end{center}
     \label{}
 \end{figure}
-\noindent Hệ thống có nhiều service nhỏ, mỗi service được build thành một docker image, sau đó dùng docker image này để deploy lên Kubernetes với các pod bọc ngoài các container. Deployment là đơn vị quản lý trực tiếp các pod, đảm bảo tính availability và scalability. HPA sẽ kết nối tới deployment, có tác dụng thay đổi số bản sao của pod trong deployment dựa theo các metric – thông số của pod được đo đạc và xác định realtime. Dựa vào một hoặc một vài thông số này để autoscaling.
+\noindent Hệ thống có nhiều service nhỏ, mỗi service được build thành một docker image, sau đó dùng docker image này để deploy lên Kubernetes với các pod bọc ngoài các container. Deployment là đơn vị quản lý trực tiếp các pod, đảm bảo tính availability và scalability. HPA sẽ kết nối tới Deployment, có tác dụng thay đổi số bản sao của pod trong Deployment dựa theo các metric – thông số của pod được đo đạc và xác định realtime. Dựa vào một hoặc một vài thông số này để thực hiện việc autoscaling cho từng serivce.
  \begin{figure}[H]
     \begin{center}
     \includegraphics[scale = 0.6]{images/phat/frontend-service.jpg}
@@ -102,8 +103,8 @@
     \label{}
 \end{figure}
 
-\noindent Mỗi microservice sẽ có một service Kubernetes (Trong môi trường Kubernetes, "service" là một đối tượng trừu tượng giúp liên kết các microservices và cung cấp một cổng vào các ứng dụng chạy trong môi trường container) để làm endpoint truy cập đến các pod do địa chỉ IP các pod thay đổi trong khi đó địa chỉ IP của service thì lại không đổi. Ngoài ra, chúng ta có thể dùng service name để gọi thay IP cho mỗi microservice. Service name này dùng để gọi nội bộ giữa các service trong cluster. Khi triển khai ứng dụng lên cloud hệ thống sẽ cung cấp thêm các master node để đảm bảo tính availability, bên cạnh đó, chúng ta cũng có thể tận dụng được firewall hay các traffic rule để đảm bảo tính security và chống DDoS.\\[0.5cm]
-\noindent Hệ thống còn dùng thêm một tính năng khác của Kubernetes là Cluster Autoscaler để tự động mở rộng hoặc thu hẹp kích thước của một cluster Kubernetes bằng cách thêm hoặc giảm số lượng các node (máy ảo hoặc máy vật lý) trong cluster nhằm duy trì một số lượng node đủ để chứa tất cả các Pods đang chạy trong cluster mà không gây lãng phí tài nguyên.
+\noindent Mỗi microservice sẽ có một Kubernetes Service (Trong môi trường Kubernetes, "service" là một đối tượng trừu tượng giúp liên kết các microservices và cung cấp một cổng vào các ứng dụng chạy trong môi trường container) để làm endpoint truy cập đến các pod do địa chỉ IP các pod thay đổi trong khi đó địa chỉ IP của service thì lại không đổi. Ngoài ra, chúng ta có thể dùng service name để gọi thay IP cho mỗi microservice. Service name này dùng để gọi nội bộ giữa các service trong cluster. Khi triển khai ứng dụng lên cloud hệ thống sẽ cung cấp thêm các master node để đảm bảo tính availability, bên cạnh đó, chúng ta cũng có thể tận dụng được firewall hay các traffic rule để đảm bảo tính security và chống DDoS.\\[0.5cm]
+\noindent Hệ thống còn có thể triển khai thêm một plugin nữa của Kubernetes là Cluster Autoscaler để tự động mở rộng hoặc thu hẹp kích thước của một cluster Kubernetes bằng cách thêm hoặc giảm số lượng các node (máy ảo hoặc máy vật lý) trong cluster nhằm duy trì một số lượng node đủ để chứa tất cả các Pods đang chạy trong cluster mà không gây lãng phí tài nguyên.
  \begin{figure}[H]
     \begin{center}
     \includegraphics[scale = 0.25]{images/phat/service-cluster.jpg}
