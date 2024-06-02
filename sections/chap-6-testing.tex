@@ -2119,7 +2119,7 @@ Với minikube trên Linux, ta có thể triển khai Metal Load Balancer. Khi s
 
 \noindent Thông qua các hình ảnh trên, cùng với thông tin triển khai được cung cấp trước đó, ta có thể kết luận được rằng, hệ thống sẽ được gia tăng tính sẵn sàng, khi ta có thể mở rộng và phân phối tải hợp lý vào các pod. Sự chênh lệch giữa hiệu năng của HPA truyền thống (hình \ref{fig:component-hpa}), và việc sử dụng Keda ScaledObject (hình \ref{fig:component-keda}) là không đáng kể khi 2 giải pháp này chưa được tối ưu về hiệu năng.
 
-\subsubsection{Kiểm tra sự hiệu quả của cấu hình Horizontal Pod Autoscaler so với mặc định}
+\subsection{Kiểm tra sự hiệu quả của cấu hình Horizontal Pod Autoscaler so với mặc định}
 \noindent \textbf{Thiết lập}\\[0.5cm]
 Sử dụng k6, ta sẽ kiểm tra khả năng scale cũng như khả năng chịu tải của \lstinline|catalog-ms| với HPA cấu hình mặc định của Kubernetes, và cấu hình đã được tùy chỉnh của nhóm.\\[0.5cm]
 Với cấu hình mặc định, ta sẽ triển khai bằng câu lệnh:
