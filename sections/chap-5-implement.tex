@@ -1,29 +1,4 @@
 \chapter{Hiện thực hệ thống}
-% \section{Công nghệ sử dụng}
-% Để hiện thực hệ thống, nhóm quyết định sử dụng các công nghệ sau:
-% \begin{itemize}
-%     \item ReactJS: Hiện thực UI, frontend.
-%     \item Java Springboot: Hiện thực microservice, backend.
-%     \item PostgresSQL: Hệ cơ sở dữ liệu lưu trữ thông tin.
-%     \item Kubernetes: Deploy các microservice.
-%     \item Minikube: Chạy Kubernetes cluster trên local.
-%     \item Terraform: Khởi tạo 
-% \end{itemize}
-
-% \section{Giới hạn phạm vi}
-% \subsection{Về mặt nghiệp vụ}
-% \noindent Sau khi bàn bạc, nhóm đi tới thống nhất là sẽ hiện thực phần Trang chủ (Home page - Catalog), vì đó là thành phần mà người dùng sẽ gặp đầu tiên khi bắt đầu truy cập vào hệ thống.
-% \subsection{Về mặt thành phần hệ thống}
-% \noindent Sau khi cân nhắc kỹ lưỡng, để đảm bảo cho phiên bản demo thể hiện được trọn vẹn và đầy đủ nhất các tính chất cốt lõi của hệ thống, nhóm đã giới hạn phạm vi hiện thực của hệ thống xuống còn các thành phần như sau:
-% \begin{itemize}
-%     \item Frontend: Trang chủ - Catalog, thể hiện danh sách các mặt hàng đang được bày bán 
-%     \item Backend: Catalog service, cung cấp API danh sách sản phẩm.
-%     \item Minikube cluster: Cung cấp môi trường Kubernetes cluster local trên máy tính cá nhân.
-%     \item Deployment: Thành phần cơ bản nhất của hệ thống, dùng để quản lý trực tiếp các pod.
-%     \item Service: Một lớp ảo hóa để các thành phần khác có thể truy cập tới các pod.
-%     \item Ingress: Đóng vai trò như reverse proxy, cung cấp API gateway để kết nối từ bên ngoài cluster tới service.
-%     \item Horizontal Pod Autoscaler: Dùng để tăng hoặc giảm số pod một cách tự động, dựa trên các thông số (metrics) của chính các pod đó.
-% \end{itemize}
 \section{Lựa chọn công nghệ và thư viện}
 \subsection{Frontend}
 \noindent Để hiện thực giao diện người dùng, nhóm đã lựa chọn ReactJS, một thư viện JavaScript phổ biến được phát triển bởi Facebook. ReactJS giúp xây dựng giao diện người dùng một cách dễ dàng, linh hoạt và hiệu quả. Nó sử dụng cơ chế Virtual DOM để tối ưu hóa hiệu suất, giúp người dùng có trải nghiệm tốt hơn.\\[0.5cm]
@@ -301,4 +276,19 @@ Ngoài ra, để việc đóng góp của các thành viên được diễn ra m
     \vspace*{3mm}
     \caption{Giao diện popup thông báo mới}
     \end{center}
+\end{figure}
+\section{Điều chỉnh lại kiến trúc hệ thống khi hiện thực và triển khai}
+\noindent So sánh kiến trúc được hiện thực và triển khai (hình \ref{fig:architecture-deploy}) với kiến trúc thiết kế ban đầu (hình \ref{fig:system-architecture-design}), , nhóm đã điêu chỉnh và tinh giản bớt đi một số chi tiết do giới hạn về thời gian, bao gồm:
+\begin{itemize}
+    \item Loại bỏ các luồng dịch vụ shipping, payment, discount nhằm giảm bớt khối lượng công việc, nhưng vẫn giữ lại những dịch vụ cốt lõi quan trọng của hệ thống thương mại điện tử.
+    \item Thay vì triển khai RabbitMQ cluster thì chỉ triển khai RabbitMQ statefullset, giảm được khối lượng công việc nhưng vẫn giúp RabbitMQ đảm bảo sự toàn vẹn dữ liệu.
+    \item Các microservice sẽ ưu tiên gọi thẳng tới nhau thay vì tất cả liên lạc phải đi qua RabbitMQ, giảm độ phức tạp khi hiện thực các microservice, đồng thời tăng tính sẵn sàng của luồng dịch vụ khi luồng dịch vụ không bắt buộc phải phụ thuộc vào RabbitMQ.
+\end{itemize}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[scale = 0.5]{images/hanh/DATN_architecture}
+    \end{center}
+    \caption{Mô hình kiến trúc hệ thống khi hiện thực và triển khai}
+    \label{fig:architecture-deploy}
+  
 \end{figure}
