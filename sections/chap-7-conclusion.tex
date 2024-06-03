@@ -17,12 +17,12 @@ cho các sản phẩm công nghệ, nhưng vẫn đầy đủ các chức năng 
     \item So sánh, đối chiếu ưu điểm và nhược điểm cả các kiểu kiến trúc hệ thống để chọn ra kiến trúc phù hợp nhất, đó là kiến trúc microservice.
     \item Tìm hiểu các khái niệm, ý tưởng, kiến trúc, cách hoạt động của hệ thống Kubernetes.
     \item Nghiên cứu phương phát hiện thực và triển khai hệ thống microservice trên Kubernetes.
-    \item Lựa chọn ngôn ngữ lập trình, framework, công nghệ phù hợp để xây dụng hệ thống: Frontend (web), các microservice backend và cơ sở dữ liệu.
+    \item Lựa chọn ngôn ngữ lập trình, framework, công nghệ phù hợp để xây dụng hệ thống: frontend (web), các microservice backend và cơ sở dữ liệu.
     \item Lựa chọn hệ quản trị cơ sở dữ liệu phù hợp với hệ thống, cũng như công cụ để xây dựng hệ thống Kubernetes ở môi trường local.
     \item Tìm hiểu các phương pháp kiểm thử hệ thống để kiểm tra tính sẵn sàng và tính mở rộng cao.
     \item Nghiên cứu các phương pháp giám sát, theo dõi hệ thống để đảm bảo hệ thống luôn hoạt động ổn định.
     \item Phân tích sự phù hợp giữa các loại message broker để chọn ra loại phù hợp nhất với hệ thống, đó là RabbitMQ.
-    \item Nghiên cứu các phương pháp giúp người dùng nhận được thông báo thời gian thực khi có sự kiện xảy ra trên hệ thống, đó là Websocket.
+    \item Nghiên cứu các phương pháp giúp người dùng nhận được thông báo thời gian thực khi có sự kiện xảy ra trên hệ thống, đó là Websocket, thông qua thư viện SocketIO.
 \end{itemize}
 \subsection{Đối với phân tích và thiết kế hệ thống}
 \noindent Dựa vào các thông tin cơ sở lý thuyết, công nghệ đã tìm hiểu, cộng thêm các trải nghiệm thực tế thì nhóm đã đưa ra được thiết kế kiến trúc hoàn chỉnh của hệ thống:
@@ -56,16 +56,16 @@ Kubernetes để hoàn thành mục tiêu, nhiệm vụ đề ra trong đồ án
 \subsubsection{Quản lý công việc}
 \begin{itemize}
     \item Sử dụng mô hình Scrum - Agile để quán lý quá trình và tiến độ công việc.
-    \item Sử dụng Google Drive và Google Sheet để quản lý tài liệu và công việc.
+    \item Sử dụng Google Drive và Google Workspace để quản lý tài liệu và công việc.
     \item Các công việc theo từng giai đoạn được chia thành các Sprint nhỏ để dễ quản lý và theo dõi.
     \item Mỗi Sprint sẽ có tương ứng một Sprint Backlog chứa danh sách các công việc cụ thể mà nhóm sẽ làm trong Sprint đó.
-    \item Mỗi Sprint kéo dài 2 tuần, cuối mỗi Sprint sẽ có một buổi meeting để đánh giá công việc đã làm và đưa ra kế hoạch cho Sprint tiếp theo.
+    \item Mỗi Sprint kéo dài 2 tuần, cuối mỗi Sprint sẽ có một buổi meeting với giảng viên hướng dẫn để đánh giá công việc đã làm và đưa ra kế hoạch cho Sprint tiếp theo.
     \item Thường xuyên tổ chức các buổi meeting hàng tuần để trao đổi cũng như đưa ra giải pháp cho các
     vấn đề gặp phải trong quá trình hiện thực. 
 \end{itemize}
 \section{Đánh giá kết quả đạt được}
 \subsection{Đánh giá thiết kế}
-\noindent Hệ thống được xây dựng nhằm mục đích là thử nghiệm các lý thuyết để có được một hệ thống vừa có tính sẵn sàng cao mà vừa có tính mở rộng cao. Đồng thời, giải pháp được áp dụng trong hệ thống có thể sử dụng với nhiều môi trường cloud khác nhau, tăng tính linh động khi triển khai thực tế.
+\noindent Hệ thống được xây dựng nhằm mục đích là thử nghiệm các lý thuyết để có được một hệ thống vừa có tính sẵn sàng cao mà vừa có tính mở rộng cao. Đồng thời, giải pháp được áp dụng trong hệ thống có thể sử dụng với bất cứ nền tảng cung cấp dịch vụ Kubernetes nào, do đó tăng tính linh động khi triển khai thực tế.
 \subsubsection{Ưu điểm}
 \begin{itemize}
     \item Hệ thống đảm bảo được tính sẵn sàng cao, tính mở rộng cao.
@@ -74,7 +74,7 @@ Kubernetes để hoàn thành mục tiêu, nhiệm vụ đề ra trong đồ án
 \end{itemize}
 \subsubsection{Nhược điểm}
 \begin{itemize}
-    \item Việc deploy khá phức tạp, cần có sự hiểu biết về Kubernetes và nền tảng cloud dùng để deploy.
+    \item Việc triển khai khá phức tạp, cần có sự hiểu biết về Kubernetes và nền tảng cloud dùng để triển khai.
     \item Việc kiểm thử cũng tốn nhiều công sức do việc chạy ở local phức tạp và hạn chế hơn khá nhiều khi chạy trên môi trường cloud, tuy nhiên nếu đưa lên cloud sớm thì sẽ không tối ưu về mặt chi phí.
 \end{itemize}
 \subsection{Đánh giá tính khả thi}
@@ -99,7 +99,7 @@ mặt công nghệ như sau:
 \end{itemize}
 \subsubsection{Tính khả thi về mặt Kinh tế}
 \noindent Các công nghệ được dùng đều là mã nguồn mở, miễn phí, do đó sẽ không tốn chi phí bản quyền.\\[0.5cm]
-Về việc triển khai hệ thống, nhóm đã chứng mình thành công các lý thuyết được đưa ra ở môi trường local, do đó
+Về việc triển khai hệ thống, nhóm đã chứng mình thành công tính đúng đắn các lý thuyết được đưa ra ở môi trường local, do đó
 sẽ không tốn chi phí để sử dụng các nền tảng dịch vụ cloud.
 \subsubsection{Tính khả thi về mặt Vận hành}
 \noindent Về phía người dùng, hệ thống không có gì khác biệt so với các hệ thống thương mại điện tử khác, 
