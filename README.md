@@ -1,6 +1,8 @@
 # Thesis of ecommerce and kubernetes
 
-This project is used to render Latex thesis
+This project is used to render Latex thesis.
+
+The source code for the ecommerce app is [here](https://github.com/LittleLegend-Pengiun/ecommerce-k8s-app).
 
 ## Setup
 
@@ -10,7 +12,7 @@ After installing [**Tex Studio**](https://www.texstudio.org/), user need to setu
 
 <img src="images/texstudio-settings.png" width="100%">
 
-If user prefer **Visual Studio Code**, they can also take a look at [this guide](https://mathjiajia.github.io/vscode-and-latex/).
+If users prefer **Visual Studio Code**, they can also take a look at [this guide](https://mathjiajia.github.io/vscode-and-latex/).
 
 ## Git convention
 
